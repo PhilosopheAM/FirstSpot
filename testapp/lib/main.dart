@@ -1,6 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
-void main() {
+void main() async {
+  // 初始化Firebase
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  
+  // 启用Firebase调试模式
+  FirebaseAuth.instance.setSettings(
+    appVerificationDisabledForTesting: true,
+  );
+  
+  // 启用Firestore调试日志
+  FirebaseFirestore.instance.settings = const Settings(
+    persistenceEnabled: true,
+    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+  );
+  
+  // 启用Analytics调试模式
+  await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
+  
   // Run test function once at startup
   test();
   runApp(const MyApp());
@@ -12,10 +34,24 @@ void null_test(String? first, String? middle, String? last){
   name ??= last;
   print(name);
 }
-void test(){
-  null_test(null, null, "Depression");
+void test() async{
+  for (final value in getNumbers()){
+    print(value);
+  }
+  
+}
+Iterable<int> getNumbers() sync*{
+  yield 1;
+  yield 2;
+  yield 3;
+}
+Stream<String> StreamOfString(){
+  return Stream.periodic(const Duration(seconds: 1), (index) => "Harry $index");
 }
 
+Future<int> MultiplyByTwo(int a){
+  return Future.delayed(const Duration(seconds: 10), () => a * 2);
+}
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
