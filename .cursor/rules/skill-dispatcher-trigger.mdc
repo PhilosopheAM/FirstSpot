@@ -1,0 +1,27 @@
+---
+description: 任务分发 - 用户布置任务时隐式触发 skill-dispatcher
+alwaysApply: true
+---
+
+# 任务分发 (Task Dispatch)
+
+当用户布置**实现类任务**时，优先应用 skill-dispatcher 进行分析与指派。
+
+## 排除场景
+
+用户以 `guide:` 或 `提问` 开头时，**不**应用 skill-dispatcher，改用 flutter-guide。
+
+## 触发场景
+
+用户请求包含以下任一特征时，**先**读取并应用 `.cursor/skills/skill-dispatcher/SKILL.md`：
+
+- 修改类：修改、改、调整、更新
+- 实现类：实现、添加、创建、做
+- 请求类：帮我、请、需要
+- 具体动作：改颜色、加动画、设计、测试、创建页面
+
+## 执行顺序
+
+1. 应用 skill-dispatcher（分析任务 → 匹配技能 → 列出方案）
+2. 按 skill-dispatcher 的匹配结果，依次读取并应用对应 Skills
+3. 输出遵循 firstspot-coding-standards 规范

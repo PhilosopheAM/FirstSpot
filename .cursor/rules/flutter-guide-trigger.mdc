@@ -1,0 +1,10 @@
+---
+description: Flutter 指导 - 当用户以 guide: 或 提问 开头时触发
+alwaysApply: true
+---
+
+# Flutter Guide Trigger
+
+当用户消息以 **`guide:`** 或 **`提问`** 开头时，优先应用 `.cursor/skills/flutter-guide/SKILL.md`。
+
+回答仅展示在对话中，不生成额外文件。

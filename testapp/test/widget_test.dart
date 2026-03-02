@@ -11,20 +11,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:testapp/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('Hola page day/night toggle', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // 初始：白底黑字，显示 Hola!
+    final Scaffold initialScaffold =
+        tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(initialScaffold.backgroundColor, Colors.white);
+    expect(find.text('Hola!'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    // 点击 Day，变为黑底白字
+    await tester.tap(find.text('Day'));
     await tester.pump();
+    final Scaffold dayScaffold =
+        tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(dayScaffold.backgroundColor, Colors.black);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // 再点击 Night，恢复白底黑字
+    await tester.tap(find.text('Night'));
+    await tester.pump();
+    final Scaffold nightScaffold =
+        tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(nightScaffold.backgroundColor, Colors.white);
   });
 }

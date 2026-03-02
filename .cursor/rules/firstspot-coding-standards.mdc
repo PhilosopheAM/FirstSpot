@@ -1,0 +1,167 @@
+---
+description: FirstSpot 项目代码规范 - 文件头、注释、模块关联说明
+alwaysApply: true
+---
+
+# FirstSpot 投资账户记账软件 - 代码规范
+
+本项目为 FirstSpot 投资账户记账软件，前端使用 Flutter，后端使用 Python + FastAPI。所有源代码文件必须遵循以下规范。
+
+---
+
+## 1. 文件头部注释 (File Header)
+
+每个源文件开头必须包含以下头部注释，包含：更新时间、模块功能描述（中英双语）、作者与联系方式。
+
+### Dart / Flutter 示例
+
+```dart
+/// Last Updated: 2025-03-02
+/// 最后更新: 2025-03-02
+///
+/// Module: Portfolio list screen - displays user's investment portfolios
+/// 模块: 投资组合列表页 - 展示用户的投资组合
+///
+/// Dependencies: portfolio_service, data_service
+/// 依赖: portfolio_service, data_service
+///
+/// Author: Harry Chen
+/// Email: 11911421@mail.sustech.edu.cn
+```
+
+### Python 示例
+
+```python
+"""
+Last Updated: 2025-03-02
+最后更新: 2025-03-02
+
+Module: Portfolio service - manages user investment portfolios and holdings
+模块: 投资组合服务 - 管理用户投资组合与持仓
+
+Dependencies: data_service (for market data), user_service (for auth)
+依赖: data_service (行情数据), user_service (认证)
+
+Author: Harry Chen
+Email: 11911421@mail.sustech.edu.cn
+"""
+```
+
+### 必须字段
+
+| 字段 | 英文 | 中文 | 说明 |
+|------|------|------|------|
+| 更新时间 | Last Updated | 最后更新 | 格式 YYYY-MM-DD |
+| 模块功能 | Module | 模块 | 简要说明本文件实现的功能 |
+| 依赖关系 | Dependencies | 依赖 | 列出与本模块有直接调用的其他模块 |
+| 作者 | Author | - | Harry Chen |
+| 邮箱 | Email | - | 11911421@mail.sustech.edu.cn |
+
+---
+
+## 2. 方法与关键变量注释 (Google Style, 中英双语)
+
+采用 Google 文档风格，注释格式为 **"英文描述 / 中文描述"**。
+
+### Dart 示例
+
+```dart
+/// Fetches portfolio list from backend and updates local state.
+/// 从后端获取投资组合列表并更新本地状态。
+///
+/// [userId] - Current user ID for filtering portfolios
+/// [userId] - 当前用户ID，用于筛选投资组合
+///
+/// Returns list of [Portfolio] or empty list on error.
+/// 成功返回 [Portfolio] 列表，失败返回空列表。
+Future<List<Portfolio>> fetchPortfolios(String userId) async {
+  // Portfolio list cache, invalidated on refresh
+  // 投资组合列表缓存，刷新时失效
+  final List<Portfolio> _cachedPortfolios = [];
+  // ...
+}
+```
+
+### Python 示例
+
+```python
+def fetch_portfolios(user_id: str) -> list[Portfolio]:
+    """Fetches portfolio list from database for the given user.
+    根据用户ID从数据库获取投资组合列表。
+
+    Args:
+        user_id: Current user ID for filtering portfolios.
+        user_id: 当前用户ID，用于筛选投资组合。
+
+    Returns:
+        List of Portfolio objects, empty list if none found.
+        成功返回 Portfolio 列表，无数据时返回空列表。
+
+    Raises:
+        DatabaseError: When database connection fails.
+        数据库连接失败时抛出。
+    """
+    # Redis cache key for portfolio list, TTL 5 minutes
+    # 投资组合列表的 Redis 缓存键，过期时间 5 分钟
+    cache_key = f"portfolios:{user_id}"
+```
+
+---
+
+## 3. 功能模块关联说明 (Module Connections)
+
+在以下场景必须注明模块间调用关系：
+
+- **文件头部**：在 Dependencies 字段列出本模块依赖的其他模块
+- **跨模块调用处**：在调用其他服务/模块的代码上方添加简要说明
+
+### 示例
+
+```dart
+// Calls Portfolio Service API - see backend/portfolio_service/
+// 调用投资组合服务 API - 见后端 portfolio_service
+final portfolios = await portfolioApi.getPortfolios(userId);
+
+// Depends on Data Service for real-time prices
+// 依赖数据服务获取实时价格
+final price = await dataService.getCurrentPrice(symbol);
+```
+
+```python
+# Invoked by Portfolio API routes - see api/portfolio_routes.py
+# 由投资组合 API 路由调用 - 见 api/portfolio_routes.py
+def get_portfolio_holdings(portfolio_id: str) -> list[Holding]:
+    pass
+
+# Calls Data Service for market data - see services/data_service.py
+# 调用数据服务获取行情 - 见 services/data_service.py
+current_price = data_service.get_price(symbol)
+```
+
+---
+
+## 4. 项目模块架构参考
+
+根据技术文档，主要模块及关系如下：
+
+```
+User Service ←→ Portfolio Service ←→ Data Service
+                      ↓
+               Backtest Service
+```
+
+- **User Service**: 用户认证、权限
+- **Portfolio Service**: 投资组合、持仓、交易记录
+- **Data Service**: 行情数据、缓存
+- **Backtest Service**: 策略回测
+
+---
+
+## 5. 检查清单
+
+新增或修改文件时确认：
+
+- [ ] 文件头部包含更新时间、模块功能（中英）、依赖、作者、邮箱
+- [ ] 公开方法有完整文档注释（Google 风格，中英双语）
+- [ ] 关键变量有行内注释说明用途
+- [ ] 跨模块调用处注明被调用模块及路径
