@@ -55,8 +55,6 @@ class AktoolsClient:
         }
         return _request_rows(url, params)
 
-    # TODO-f76eedb840224c49a83b5b5db6be8a0c 是沧浪数据的api，文档入口是 https://tsanghi.com/fin/doc
-
 
 def rolling_window_for_trading(days: int = 420) -> tuple[str, str]:
     """Returns a wide date window to cover recent N trading bars.

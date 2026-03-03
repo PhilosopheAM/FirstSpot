@@ -20,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import DEFAULT_LIMIT, MAX_LIMIT
 from app.models import DailyResponse
 from app.providers.aktools_client import AktoolsClient
+from app.providers.canghai_client import CanghaiClient
 from app.services.daily_service import DailyService
 
 app = FastAPI(
@@ -38,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-_daily_service = DailyService(client=AktoolsClient())
+_daily_service = DailyService(client=AktoolsClient(), canghai_client=CanghaiClient())
 
 
 @app.get("/health")
