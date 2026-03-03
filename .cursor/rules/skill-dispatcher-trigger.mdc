@@ -1,15 +1,17 @@
 ---
-description: 任务分发 - 用户布置任务时隐式触发 skill-dispatcher
+description: 任务分发 - 用户布置任务时触发；若以 guide: 或 提问 开头则不适用
 alwaysApply: true
 ---
 
 # 任务分发 (Task Dispatch)
 
-当用户布置**实现类任务**时，优先应用 skill-dispatcher 进行分析与指派。
+## 【执行前必须检查】排除场景（优先于下方所有触发条件）
 
-## 排除场景
+若用户消息以 **`guide:`** 或 **`提问`** 开头（含前后有空格），则**本规则不适用**：不读取、不应用 skill-dispatcher，由 flutter-guide-trigger 规则处理。
 
-用户以 `guide:` 或 `提问` 开头时，**不**应用 skill-dispatcher，改用 flutter-guide。
+---
+
+当用户布置**实现类任务**且不满足上述排除条件时，优先应用 skill-dispatcher 进行分析与指派。
 
 ## 触发场景
 

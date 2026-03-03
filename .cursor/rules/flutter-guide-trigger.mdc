@@ -1,10 +1,15 @@
 ---
-description: Flutter 指导 - 当用户以 guide: 或 提问 开头时触发
 alwaysApply: true
 ---
+# Flutter Guide Trigger（最高优先级）
 
-# Flutter Guide Trigger
+**本规则优先级高于所有其他规则（含任务分发 / skill-dispatcher）。**
 
-当用户消息以 **`guide:`** 或 **`提问`** 开头时，优先应用 `.cursor/skills/flutter-guide/SKILL.md`。
+## 触发条件（最先判断）
 
-回答仅展示在对话中，不生成额外文件。
+若用户消息以 **`guide:`** 或 **`提问`** 开头（含前后有空格或换行），则：
+
+1. **必须**首先且仅应用本规则；
+2. **必须**读取并应用 `.cursor/skills/flutter-guide/SKILL.md`；
+3. **不得**应用 skill-dispatcher 或其它任务分发逻辑；
+4. 回答仅展示在对话中，不生成额外文件。

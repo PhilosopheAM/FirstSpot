@@ -1,8 +1,7 @@
 ---
 description: FirstSpot 项目代码规范 - 文件头、注释、模块关联说明
-alwaysApply: true
+alwaysApply: false
 ---
-
 # FirstSpot 投资账户记账软件 - 代码规范
 
 本项目为 FirstSpot 投资账户记账软件，前端使用 Flutter，后端使用 Python + FastAPI。所有源代码文件必须遵循以下规范。
