@@ -1,11 +1,11 @@
-/// Last Updated: 2026-03-05
-/// 最后更新: 2026-03-05
+/// Last Updated: 2026-04-20
+/// 最后更新: 2026-04-20
 ///
 /// Module: Reusable stock insight page wired to data middle-layer service.
 /// 模块: 连接数据中间层服务的可复用个股信息页面。
 ///
-/// Dependencies: flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service, price_fluctuation_chart
-/// 依赖: flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service, price_fluctuation_chart
+/// Dependencies: flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service, price_fluctuation_chart_v2
+/// 依赖: flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service, price_fluctuation_chart_v2
 ///
 /// Author: Harry Chen
 /// Email: 11911421@mail.sustech.edu.cn
@@ -16,7 +16,7 @@ import 'package:flutter/material.dart';
 
 import '../data/stock_insight_data_service.dart';
 import '../domain/stock_insight_models.dart';
-import '../widgets/price_fluctuation_chart.dart';
+import '../widgets/price_fluctuation_chart_v2.dart';
 
 /// Standalone reusable page for stock insight display.
 /// 可独立复用的个股信息展示页。
@@ -100,7 +100,7 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
                   delegate: _CollapsibleHeaderDelegate(
                     minExtentValue: 0,
                     maxExtentValue: maxHeaderHeight,
-                    child: PriceFluctuationChart(
+                    child: PriceFluctuationChartV2(
                       securityNameCn: data.profile.securityNameCn,
                       securityNameEn: data.profile.securityNameEn,
                       ticker: data.profile.ticker,

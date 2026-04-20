@@ -1,5 +1,5 @@
-/// Last Updated: 2026-03-05
-/// 最后更新: 2026-03-05
+/// Last Updated: 2026-04-20
+/// 最后更新: 2026-04-20
 ///
 /// Module: Stock insight data middle layer adapter with backend contract.
 /// 模块: 个股信息数据中间层适配器（含后端服务交互协议）。
@@ -95,8 +95,12 @@ class MockStockInsightBackendApi implements StockInsightBackendApi {
     const double riseEnd = 80;
     const double dropStart = 80;
     const double dropEnd = 40;
+    const double dayMillis = 86400000;
 
     final List<PricePoint> points = <PricePoint>[];
+    final double latestDayTimestamp = DateTime.utc(2026, 4, 20).millisecondsSinceEpoch.toDouble();
+    final double startDayTimestamp =
+        latestDayTimestamp - ((totalCount - 1) * dayMillis);
     for (int i = 0; i < totalCount; i++) {
       final double y;
       if (i <= riseCount) {
@@ -112,7 +116,8 @@ class MockStockInsightBackendApi implements StockInsightBackendApi {
         final double noise = (random.nextDouble() - 0.5) * 2.9;
         y = trend + wave + noise;
       }
-      points.add(PricePoint(x: i.toDouble(), y: y.clamp(8.0, 84.0)));
+      final double timestamp = startDayTimestamp + (i * dayMillis);
+      points.add(PricePoint(x: timestamp, y: y.clamp(8.0, 84.0)));
     }
     return points;
   }
