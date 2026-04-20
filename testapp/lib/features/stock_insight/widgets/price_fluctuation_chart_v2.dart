@@ -664,7 +664,7 @@ class _PriceFluctuationChartV2State extends State<PriceFluctuationChartV2> {
         high = mid;
       }
     }
-    return low.clamp(0, spots.length - 1);
+    return low.clamp(0, spots.length - 1).toInt();
   }
 
   int _upperBound(List<FlSpot> spots, double targetX) {
@@ -678,7 +678,7 @@ class _PriceFluctuationChartV2State extends State<PriceFluctuationChartV2> {
         high = mid;
       }
     }
-    return low.clamp(1, spots.length);
+    return low.clamp(1, spots.length).toInt();
   }
 
   int _estimateTargetPointCount(double chartWidth) {
@@ -772,7 +772,7 @@ class _PriceFluctuationChartV2State extends State<PriceFluctuationChartV2> {
     if (maxValue < minValue) {
       return minValue;
     }
-    return value.clamp(minValue, maxValue);
+    return value.clamp(minValue, maxValue).toInt();
   }
 }
 
