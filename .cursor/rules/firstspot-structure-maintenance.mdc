@@ -1,0 +1,54 @@
+---
+description: FirstSpot 项目目录结构维护规则 - 规定顶层目录职责与 PROJECT_STRUCTURE.md 同步义务
+alwaysApply: true
+---
+
+# FirstSpot 目录结构维护规则
+
+## 1. 顶层目录职责（不得混用）
+
+- `datafetcher/` — 后端：数据拉取与推送（Python + FastAPI + akshare）
+- `testapp/` — 前端：Flutter 应用（FirstSpot 移动端全部代码）
+- `UX-Product-Design/` — UX 产品设计资料（设计文档、用户流程、版本迭代 `V<N>/`）
+- `Design_Resource/UI_design_resource/` — UI 美术资源。**所有通过图像生成模型产出的图片必须存入此目录**（而不是根目录或其他位置）
+- `Design_Resource/Sound_design_resource/` — 声音 / 音频资源。**所有软件内音效必须存入此目录**供代码调用
+- `Reading_Material/` — 学术与理论参考 PDF
+- `.cursor/` — Cursor 规则、技能、计划
+
+## 2. 新文件归属决策表
+
+| 新产物类型 | 必须放入 |
+|---|---|
+| 图像生成模型输出（PNG/JPG/SVG） | `Design_Resource/UI_design_resource/` |
+| 音效 / BGM / 语音（MP3/WAV/OGG） | `Design_Resource/Sound_design_resource/` |
+| Python 后端代码 / 数据抓取脚本 | `datafetcher/app/` |
+| Flutter 前端代码 | `testapp/lib/` |
+| UX 设计文档 / 用户流程草案 | `UX-Product-Design/V<N>/` |
+| 参考文献 / 论文 PDF | `Reading_Material/` |
+
+## 3. 根目录禁区
+
+**严禁**在项目根目录新增以下内容：
+- 临时测试文件（`test.md`、`scratch.txt` 等）
+- 运行时日志（`*.log`，日志必须留在产生它的模块目录并加入 `.gitignore`）
+- 个人数据 dump（如从本地其它项目拷贝的 JSON/CSV）
+- 散落的图片 / 音频（必须入 `Design_Resource/`）
+
+新建此类内容前，先判断正确归属目录。
+
+## 4. 强制同步 `PROJECT_STRUCTURE.md`
+
+项目根目录的 `PROJECT_STRUCTURE.md` 是**目录结构单一真相来源**。
+
+每当你执行以下任一操作后，**必须在同一次改动中更新 `PROJECT_STRUCTURE.md`**：
+
+- 新增 / 删除 / 重命名 / 移动**文件**
+- 新增 / 删除 / 重命名 / 移动**目录**
+- 改变某个目录的用途
+
+更新内容需包含：
+1. 在目录树中增删对应条目
+2. 对新条目补一句用途说明
+3. 在文档底部「变更日志」追加一行 `YYYY-MM-DD: <改了什么>`
+
+若发现实际结构与 `PROJECT_STRUCTURE.md` 已经不符，先修正文档再继续其他工作。

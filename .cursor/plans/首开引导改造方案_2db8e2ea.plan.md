@@ -4,19 +4,19 @@ overview: 基于 `UX-Product-Design/V1/first-open-onboarding.md`，为当前 Flu
 todos:
   - id: gate-entry
     content: 梳理并改造 `main.dart` 首屏入口，设计首开判断与首页分流逻辑
-    status: pending
+    status: completed
   - id: feature-skeleton
     content: 设计 `features/onboarding` 的 data/domain/pages/widgets 模块骨架
-    status: pending
+    status: completed
   - id: flow-steps
     content: 规划四步 onboarding 的页面拆分、状态字段与交互闭环
-    status: pending
+    status: completed
   - id: dashboard-handoff
     content: 定义最小 Home Dashboard 承接页及 onboarding 完成后的跳转
-    status: pending
+    status: completed
   - id: verification
     content: 列出首开分流、跳过、完成、二次进入等关键验收与测试点
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,0 +1,56 @@
+---
+description: 强制同步 developer_maintenance 模块文档 - 每次改动代码必须更新对应模块的 .md
+alwaysApply: true
+---
+
+# FirstSpot 代码模块文档维护规则
+
+## 1. 文档位置
+
+所有模块可维护性说明文档集中在根目录 `developer_maintenance/`：
+
+- `developer_maintenance/backend/*.md` —— 按**后端代码文件**划分
+- `developer_maintenance/frontend/*.md` —— 按**前端 feature**划分
+- `developer_maintenance/README.md` —— 索引 + 命名约定
+
+每个模块文档固定包含 5 节：模块职责 / 关键文件 / 对外接口 / 依赖关系 / 变更日志。
+
+## 2. 代码 ↔ 文档映射（修改即维护）
+
+| 修改的代码路径 | 必须同步更新 |
+|---|---|
+| `datafetcher/app/main.py` | `developer_maintenance/backend/main.md` |
+| `datafetcher/app/config.py` | `developer_maintenance/backend/config.md` |
+| `datafetcher/app/models.py` | `developer_maintenance/backend/models.md` |
+| `datafetcher/app/providers/**` | `developer_maintenance/backend/providers.md` |
+| `datafetcher/app/services/daily_service.py` | `developer_maintenance/backend/services-daily.md` |
+| `datafetcher/tests/**` | `developer_maintenance/backend/tests.md` |
+| `testapp/lib/main.dart` 或 `features/onboarding/pages/first_open_gate_page.dart` | `developer_maintenance/frontend/app-entry.md` |
+| `testapp/lib/features/onboarding/**` | `developer_maintenance/frontend/feature-onboarding.md` |
+| `testapp/lib/features/stock_insight/**` | `developer_maintenance/frontend/feature-stock-insight.md` |
+
+改动代码和更新对应 `.md` **必须在同一次改动中完成**（同一个 commit / 同一轮编辑）。
+
+## 3. 具体更新要求
+
+收到改动请求后，在写代码之前先定位受影响的文档，最终提交前确认：
+
+- 改了**对外接口**（公开方法签名 / HTTP 路由 / 模型字段 / 导出符号） → 更新该文档的「对外接口」小节
+- 改了**依赖关系**（新增 import、新增被调用方） → 更新「依赖关系」
+- 新增 / 重命名 / 删除**文件** → 更新「关键文件」表
+- **任何**改动（含 bug fix、文案微调） → 在「变更日志」追加一行：`YYYY-MM-DD: <简述>`
+
+## 4. 新增模块
+
+- 新增后端 Python 文件且无合适的既有文档收纳 → 新建 `developer_maintenance/backend/<name>.md`
+- 新增前端 feature 目录 `lib/features/<feature>/` → 新建 `developer_maintenance/frontend/feature-<feature>.md`
+- 新建后必须在 `developer_maintenance/README.md` 的目录树和 `_overview.md` 中登记
+
+## 5. 不一致修复优先
+
+若发现代码与文档已经不符（历史欠账），**先修文档再继续当前任务**。允许在变更日志中记录 `YYYY-MM-DD: 文档对齐（代码已于早前变更）`。
+
+## 6. 与其它规则的关系
+
+- 目录结构类变动（新建 / 搬家 / 删除目录）同时触发 `firstspot-structure-maintenance` 规则 → 还要更新 `PROJECT_STRUCTURE.md`
+- 源码文件头部注释规范见 `firstspot-coding-standards`
