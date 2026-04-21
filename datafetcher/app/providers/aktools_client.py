@@ -1,6 +1,6 @@
 """
-Last Updated: 2026-03-03
-最后更新: 2026-03-03
+Last Updated: 2026-04-21
+最后更新: 2026-04-21
 
 Module: AKTools HTTP client for DataFetcher fallback sources.
 模块: DataFetcher 的 AKTools HTTP 客户端（用于多数据源降级）。
@@ -54,6 +54,20 @@ class AktoolsClient:
             "adjust": "",
         }
         return _request_rows(url, params)
+
+    def fetch_spot_code_name_rows(self) -> list[dict[str, Any]]:
+        """Fetches stock code-name rows from Eastmoney spot endpoint.
+        从东财实时行情接口拉取股票代码-名称行数据。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_zh_a_spot_em"
+        return _request_rows(url, params={})
+
+    def fetch_basic_code_name_rows(self) -> list[dict[str, Any]]:
+        """Fetches stock code-name rows from basic info endpoint.
+        从基础信息接口拉取股票代码-名称行数据。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_info_a_code_name"
+        return _request_rows(url, params={})
 
 
 def rolling_window_for_trading(days: int = 420) -> tuple[str, str]:

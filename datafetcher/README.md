@@ -2,7 +2,8 @@
 
 `DataFetcher` 是一个独立 Python 服务，用于把 Flutter 请求转为上游 AKTools 请求，并完成：
 
-- 数据源降级：`stock_zh_a_hist`(东财) -> `stock_zh_a_daily`(新浪)
+- 数据源降级：`stock_zh_a_hist`(东财) -> `stock_zh_a_daily`(新浪) -> `local akshare`(本地直连) -> `canghai`(沧海)
+- 输入解析：`symbol` 同时支持股票代码（如 `600519`）和股票名称（如 `贵州茅台`）
 - 字段标准化：统一成 `date/open/high/low/close/volume/amount`
 - 固定返回最近 N 条日线（默认 120）
 
@@ -64,6 +65,9 @@ GET /api/v1/stocks/{symbol}/daily?limit=120
 
 ```http
 GET http://127.0.0.1:8000/api/v1/stocks/600000/daily?limit=120
+
+# 也支持按名称输入（URL 需编码）
+GET http://127.0.0.1:8000/api/v1/stocks/%E8%B4%B5%E5%B7%9E%E8%8C%85%E5%8F%B0/daily?limit=6000
 ```
 
 返回示例（节选）：
@@ -71,6 +75,7 @@ GET http://127.0.0.1:8000/api/v1/stocks/600000/daily?limit=120
 ```json
 {
   "symbol": "600000",
+  "stock_name": "浦发银行",
   "requested_limit": 120,
   "actual_count": 120,
   "insufficient_history": false,

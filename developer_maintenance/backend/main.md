@@ -15,7 +15,7 @@
 | 方法 | 路径 | 查询参数 | 返回 |
 |---|---|---|---|
 | GET | `/health` | — | `{"status": "ok"}` |
-| GET | `/api/v1/stocks/{symbol}/daily` | `limit` (int，默认 `DEFAULT_LIMIT`，上限 `MAX_LIMIT`) | `DailyResponse` |
+| GET | `/api/v1/stocks/{symbol}/daily` | `limit` (int，默认 `DEFAULT_LIMIT`，上限 `MAX_LIMIT`) | `DailyResponse`（`symbol` 可传 6 位代码或股票名称） |
 
 ### 错误映射
 
@@ -33,3 +33,4 @@
 ## 变更日志
 
 - 2026-04-20: 初始化文档；当前实现注入了 Aktools + Canghai 两客户端，路由两个 endpoint。
+- 2026-04-21: 日线接口支持 `symbol` 使用股票名称输入（如“贵州茅台”），由 service 层做代码匹配。

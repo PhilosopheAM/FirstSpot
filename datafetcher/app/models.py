@@ -1,6 +1,6 @@
 """
-Last Updated: 2026-03-03
-最后更新: 2026-03-03
+Last Updated: 2026-04-21
+最后更新: 2026-04-21
 
 Module: DataFetcher response models for normalized stock daily data.
 模块: DataFetcher 统一股票日线数据响应模型。
@@ -37,6 +37,7 @@ class DailyResponse(BaseModel):
     """
 
     symbol: str = Field(description="Normalized six-digit symbol")
+    stock_name: str | None = Field(default=None, description="Resolved stock name if available")
     requested_limit: int
     actual_count: int
     insufficient_history: bool

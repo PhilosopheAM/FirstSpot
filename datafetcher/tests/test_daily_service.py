@@ -1,9 +1,9 @@
 """
-Last Updated: 2026-03-03
-最后更新: 2026-03-03
+Last Updated: 2026-04-21
+最后更新: 2026-04-21
 
-Module: Manual test script for DailyService.get_latest_daily.
-模块: DailyService.get_latest_daily 的手工测试脚本。
+Module: Manual test script for DailyService code-name matching and full-history daily fetch.
+模块: DailyService 股票代码/名称匹配与全历史日线拉取的手工测试脚本。
 
 Dependencies: app.services.daily_service, app.providers.aktools_client, app.providers.canghai_client
 依赖: app.services.daily_service, app.providers.aktools_client, app.providers.canghai_client
@@ -33,12 +33,20 @@ def main() -> None:
     """
     service = DailyService(client=AktoolsClient(), canghai_client=CanghaiClient())
 
-    # Example: 300059 (东方财富)，最近 12 个交易日。
-    # 示例: 300059 (东方财富)，最近 12 个交易日。
-    response = service.get_latest_daily(symbol="300059", limit=12)
+    # Example: 贵州茅台（600519），按名称输入并尝试覆盖上市至今。
+    # 示例: 输入“贵州茅台”，验证名称匹配与全历史拉取（使用较大 limit）。
+    response = service.get_latest_daily(symbol="贵州茅台", limit=6000)
 
-    print("DailyService.get_latest_daily response (300059, limit=12):")
-    pprint(response.model_dump(), sort_dicts=False)
+    payload = response.model_dump()
+    print("DailyService.get_latest_daily response (贵州茅台, limit=6000):")
+    print(
+        "symbol={symbol}, stock_name={stock_name}, source_used={source_used}, actual_count={actual_count}".format(
+            **payload
+        )
+    )
+    if payload["data"]:
+        print(f"first_date={payload['data'][0]['date']}, last_date={payload['data'][-1]['date']}")
+    pprint(payload, sort_dicts=False)
 
 
 if __name__ == "__main__":

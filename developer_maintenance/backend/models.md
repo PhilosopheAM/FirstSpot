@@ -33,6 +33,7 @@ Flutter 消费的顶层响应结构。
 | 字段 | 类型 | 说明 |
 |---|---|---|
 | `symbol` | `str` | 标准化后的 6 位股票代码 |
+| `stock_name` | `str \| None` | 若能识别则返回股票名称（如按名称输入会原样回填） |
 | `requested_limit` | `int` | 前端请求的 limit |
 | `actual_count` | `int` | 实际返回的日线条数 |
 | `insufficient_history` | `bool` | 是否不足 limit（新股等） |
@@ -48,3 +49,4 @@ Flutter 消费的顶层响应结构。
 ## 变更日志
 
 - 2026-04-20: 初始化文档；当前 2 个模型，`DailyBar.amount` 为可空。
+- 2026-04-21: `DailyResponse` 新增 `stock_name` 字段，支持代码名称匹配结果回传。

@@ -62,7 +62,8 @@ UX-Product-Design/
 ├── UX-产品分析.md             # 顶层产品分析文档
 ├── V1/                       # 版本 V1 设计资料
 │   ├── Scratch_List/         #   各界面的草图 / 交互草案 markdown
-│   └── first-open-onboarding.md
+│   ├── first-open-onboarding.md            # V1 首开引导结构层（页面列表 / 元素清单）
+│   └── Gamified_Onboarding_Design.md       # V1 游戏化设计（Duolingo-style，面向 Z 世代 16-28）
 └── guidance/                 # 投资者教育学习框架（12 章 + 总览）
     ├── 00_学习框架总览.md     #   索引与收藏卡片系统总览
     ├── 01_什么是二级市场.md
@@ -169,3 +170,4 @@ developer_maintenance/
 - 2026-04-20: 新增 `.cursor/rules/firstspot-structure-maintenance.mdc` 强制结构维护规则。
 - 2026-04-20: 新增 `developer_maintenance/` 代码维护文档体系（backend/ + frontend/ 共 12 个 .md），并新增 `.cursor/rules/firstspot-developer-maintenance.mdc` 强制每次代码改动同步更新对应模块文档。
 - 2026-04-20: 新增 `UX-Product-Design/guidance/` 投资者教育学习框架目录，含 1 份总览 + 12 章内容脚本（配套重要概念卡片 CARD-01 ~ CARD-12，按白/蓝/紫/金四级稀有度分布）。
+- 2026-04-21: 新增 `UX-Product-Design/V1/Gamified_Onboarding_Design.md` 游戏化首开引导设计文档（Duolingo-inspired，Gen Z 16-28 目标人群，定义 Myo（喵）IP / FP-XP / Streak / 耐心值 / 双货币 / 成长小组 / 成就墙 / 小金库路径 / Myo 推送人格 共 10 大机制 + 6 步首开流程）。

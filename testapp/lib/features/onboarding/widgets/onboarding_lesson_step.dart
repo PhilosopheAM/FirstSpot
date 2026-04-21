@@ -1,16 +1,16 @@
-/// Last Updated: 2026-04-10
-/// 最后更新: 2026-04-10
+/// Last Updated: 2026-04-21
+/// 最后更新: 2026-04-21
 ///
 /// Module: Onboarding Mini Lesson Step
 /// 模块: 首开引导 - 迷你教学步骤
 ///
-/// Dependencies: flutter/material.dart
-/// 依赖: flutter/material.dart
+/// Dependencies: flutter/material.dart, bouncy_button
 ///
-/// Author: Harry Chen
+/// Author: Harry Chen (Modified by AI)
 /// Email: 11911421@mail.sustech.edu.cn
 
 import 'package:flutter/material.dart';
+import 'bouncy_button.dart';
 
 class OnboardingMiniLessonStep extends StatefulWidget {
   const OnboardingMiniLessonStep({
@@ -21,7 +21,8 @@ class OnboardingMiniLessonStep extends StatefulWidget {
   final VoidCallback onNext;
 
   @override
-  State<OnboardingMiniLessonStep> createState() => _OnboardingMiniLessonStepState();
+  State<OnboardingMiniLessonStep> createState() =>
+      _OnboardingMiniLessonStepState();
 }
 
 class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep> {
@@ -70,157 +71,206 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep> {
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
-          '步骤 2/3',
+          '2 / 3',
           style: TextStyle(
-            color: Color(0xFF8A959E),
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
+            color: Color(0xFFB0B9C0),
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.5,
           ),
         ),
         centerTitle: true,
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              const SizedBox(height: 16),
-              const Text(
-                '投资的 3 个基础概念',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF162025),
-                  height: 1.3,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '搞懂这些，你就比 80% 的小白强了。',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF5D696F),
-                ),
-              ),
-              const Spacer(),
-              
-              // 教学卡片
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (Widget child, Animation<double> animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.05, 0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Container(
-                  key: ValueKey<int>(_currentCardIndex),
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: const <BoxShadow>[
-                      BoxShadow(
-                        color: Color(0x0A000000),
-                        blurRadius: 24,
-                        offset: Offset(0, 12),
+        child: Column(
+          children: <Widget>[
+            // Duolingo-like segmented progress bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              child: Row(
+                children: List.generate(3, (index) {
+                  final isFilled = index < 2;
+                  return Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: isFilled
+                            ? const Color(0xFF1FA95B)
+                            : const Color(0xFFE5E9EC),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Color(int.parse(lesson['color']!)),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Text(
-                            lesson['icon']!,
-                            style: const TextStyle(fontSize: 40),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        lesson['title']!,
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF162025),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        lesson['desc']!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Color(0xFF5D696F),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              const Spacer(),
-              
-              // 进度点
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_lessons.length, (index) {
-                  final bool isActive = index == _currentCardIndex;
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    height: 8,
-                    width: isActive ? 24 : 8,
-                    decoration: BoxDecoration(
-                      color: isActive ? const Color(0xFF1FA95B) : const Color(0xFFE5E9EC),
-                      borderRadius: BorderRadius.circular(4),
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 32),
-              
-              // 按钮
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _nextCard,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF1FA95B),
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const SizedBox(height: 24),
+                    const Text(
+                      '投资的 3 个基础概念',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF162025),
+                        height: 1.3,
+                      ),
                     ),
-                    elevation: 0,
+                    const SizedBox(height: 8),
+                    const Text(
+                      '搞懂这些，你就比 80% 的小白强了。',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF8A959E),
+                      ),
+                    ),
+                    const Spacer(),
+
+                    // 教学卡片
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      switchInCurve: Curves.easeOutBack,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                        final inAnimation = Tween<Offset>(
+                          begin: const Offset(0.5, 0),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return SlideTransition(
+                          position: inAnimation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Container(
+                        key: ValueKey<int>(_currentCardIndex),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: const Color(0xFFE5E9EC),
+                            width: 3,
+                          ),
+                          boxShadow: const <BoxShadow>[
+                            BoxShadow(
+                              color: Color(0xFFE5E9EC),
+                              offset: Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: <Widget>[
+                            Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: Color(int.parse(lesson['color']!)),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Color(int.parse(lesson['color']!))
+                                      .withOpacity(0.5),
+                                  width: 6,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  lesson['icon']!,
+                                  style: const TextStyle(fontSize: 50),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            Text(
+                              lesson['title']!,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF162025),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              lesson['desc']!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                height: 1.6,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF5D696F),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    // 进度点 (Lesson internal progress)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_lessons.length, (index) {
+                        final bool isActive = index == _currentCardIndex;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          height: 10,
+                          width: isActive ? 28 : 10,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? const Color(0xFF1FA95B)
+                                : const Color(0xFFE5E9EC),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+            
+            // 底部反馈与按钮区
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: Color(0xFFE5E9EC),
+                    width: 2,
                   ),
+                ),
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: BouncyButton(
+                  onPressed: _nextCard,
                   child: Text(
                     isLast ? '太棒了，生成我的起步计划' : '我懂了，下一个',
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

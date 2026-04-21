@@ -20,6 +20,8 @@
 |---|---|---|---|
 | `fetch_hist_daily(symbol, start_date, end_date)` | `AKTOOLS/api/public/stock_zh_a_hist` | 6 位代码；`YYYYMMDD` | `list[dict]`（东财字段） |
 | `fetch_sina_daily(symbol, start_date, end_date)` | `AKTOOLS/api/public/stock_zh_a_daily` | 带市场前缀代码（sh/sz/bj） | `list[dict]`（新浪字段） |
+| `fetch_spot_code_name_rows()` | `AKTOOLS/api/public/stock_zh_a_spot_em` | 无 | `list[dict]`（实时行情含代码/名称） |
+| `fetch_basic_code_name_rows()` | `AKTOOLS/api/public/stock_info_a_code_name` | 无 | `list[dict]`（基础代码名录） |
 
 模块级工具函数：
 
@@ -62,3 +64,4 @@
 ## 变更日志
 
 - 2026-04-20: 初始化文档；当前 2 个 provider：Aktools（双子方法）+ Canghai。
+- 2026-04-21: `AktoolsClient` 新增代码名录双端点（spot 主源 + basic 降级）以支撑名称匹配。
