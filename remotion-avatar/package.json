@@ -1,0 +1,20 @@
+{
+  "name": "firstspot-avatar-motion",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render:webm": "remotion render src/index.ts CatWave out/cat-wave-transparent.webm --image-format=png --pixel-format=yuva420p --codec=vp9"
+  },
+  "dependencies": {
+    "@remotion/cli": "latest",
+    "remotion": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "latest"
+  }
+}

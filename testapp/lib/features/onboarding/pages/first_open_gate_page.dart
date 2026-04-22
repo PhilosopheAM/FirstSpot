@@ -1,18 +1,19 @@
-/// Last Updated: 2026-04-10
-/// 最后更新: 2026-04-10
-///
-/// Module: First open gate page - unified entry for routing
-/// 模块: 首开判断分流页 - 统一的路由入口
-///
-/// Dependencies: flutter/material.dart, onboarding_preferences_service, onboarding_flow_page, home_dashboard_page
-/// 依赖: flutter/material.dart, onboarding_preferences_service, onboarding_flow_page, home_dashboard_page
-///
-/// Author: Harry Chen
-/// Email: 11911421@mail.sustech.edu.cn
+// Last Updated: 2026-04-10
+// 最后更新: 2026-04-10
+//
+// Module: First open gate page - unified entry for routing
+// 模块: 首开判断分流页 - 统一的路由入口
+//
+// Dependencies: flutter/material.dart, onboarding_preferences_service, onboarding_flow_page, home_dashboard_page
+// 依赖: flutter/material.dart, onboarding_preferences_service, onboarding_flow_page, home_dashboard_page
+//
+// Author: Harry Chen
+// Email: 11911421@mail.sustech.edu.cn
 
 import 'package:flutter/material.dart';
 
 import '../data/onboarding_preferences_service.dart';
+import 'avatar_launch_page.dart';
 import 'home_dashboard_page.dart';
 import 'onboarding_flow_page.dart';
 
@@ -24,8 +25,10 @@ class FirstOpenGatePage extends StatefulWidget {
 }
 
 class _FirstOpenGatePageState extends State<FirstOpenGatePage> {
-  final OnboardingPreferencesService _prefsService = OnboardingPreferencesService();
+  final OnboardingPreferencesService _prefsService =
+      OnboardingPreferencesService();
   bool _isLoading = true;
+  bool _hasLaunchAnimationFinished = false;
   bool _shouldShowOnboarding = false;
 
   @override
@@ -44,16 +47,28 @@ class _FirstOpenGatePageState extends State<FirstOpenGatePage> {
     }
   }
 
+  void _handleLaunchAnimationFinished() {
+    if (!mounted || _hasLaunchAnimationFinished) {
+      return;
+    }
+
+    setState(() {
+      _hasLaunchAnimationFinished = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_hasLaunchAnimationFinished) {
+      return AvatarLaunchPage(onFinished: _handleLaunchAnimationFinished);
+    }
+
     // 异步加载时的极简 Loading / Splash 态
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Color(0xFFF7FAF8),
         body: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF1FA95B),
-          ),
+          child: CircularProgressIndicator(color: Color(0xFF1FA95B)),
         ),
       );
     }

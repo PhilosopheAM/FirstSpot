@@ -1,13 +1,13 @@
-/// Last Updated: 2026-04-21
-/// 最后更新: 2026-04-21
-///
-/// Module: Onboarding Welcome Step
-/// 模块: 首开引导 - 欢迎步骤
-///
-/// Dependencies: flutter/material.dart, bouncy_button
-///
-/// Author: Harry Chen (Modified by AI)
-/// Email: 11911421@mail.sustech.edu.cn
+// Last Updated: 2026-04-21
+// 最后更新: 2026-04-21
+//
+// Module: Onboarding Welcome Step
+// 模块: 首开引导 - 欢迎步骤
+//
+// Dependencies: flutter/material.dart, bouncy_button
+//
+// Author: Harry Chen (Modified by AI)
+// Email: 11911421@mail.sustech.edu.cn
 
 import 'package:flutter/material.dart';
 import 'bouncy_button.dart';
@@ -40,10 +40,7 @@ class _OnboardingWelcomeStepState extends State<OnboardingWelcomeStep>
     )..repeat(reverse: true);
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.1).animate(
-      CurvedAnimation(
-        parent: _iconController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _iconController, curve: Curves.easeInOut),
     );
   }
 
@@ -75,29 +72,34 @@ class _OnboardingWelcomeStepState extends State<OnboardingWelcomeStep>
               ),
             ),
             Expanded(
-              child: Padding(
+              child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    ScaleTransition(
-                      scale: _scaleAnimation,
-                      child: Container(
-                        width: 160,
-                        height: 160,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFF1FA95B).withOpacity(0.2),
-                            width: 8,
+                    const SizedBox(height: 24),
+                    Center(
+                      child: ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Container(
+                          width: 148,
+                          height: 148,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8F5E9),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(
+                                0xFF1FA95B,
+                              ).withValues(alpha: 0.2),
+                              width: 8,
+                            ),
                           ),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.monetization_on_rounded,
-                            size: 100,
-                            color: Color(0xFF1FA95B),
+                          child: const Center(
+                            child: Icon(
+                              Icons.monetization_on_rounded,
+                              size: 92,
+                              color: Color(0xFF1FA95B),
+                            ),
                           ),
                         ),
                       ),
