@@ -171,3 +171,4 @@ developer_maintenance/
 - 2026-04-20: 新增 `developer_maintenance/` 代码维护文档体系（backend/ + frontend/ 共 12 个 .md），并新增 `.cursor/rules/firstspot-developer-maintenance.mdc` 强制每次代码改动同步更新对应模块文档。
 - 2026-04-20: 新增 `UX-Product-Design/guidance/` 投资者教育学习框架目录，含 1 份总览 + 12 章内容脚本（配套重要概念卡片 CARD-01 ~ CARD-12，按白/蓝/紫/金四级稀有度分布）。
 - 2026-04-21: 新增 `UX-Product-Design/V1/Gamified_Onboarding_Design.md` 游戏化首开引导设计文档（Duolingo-inspired，Gen Z 16-28 目标人群，定义 Myo（喵）IP / FP-XP / Streak / 耐心值 / 双货币 / 成长小组 / 成就墙 / 小金库路径 / Myo 推送人格 共 10 大机制 + 6 步首开流程）。
+- 2026-04-24: 首开启动动效改为 `testapp/assets/animations/myo_wave_frames/` 透明 PNG 序列帧逐帧播放方案；生成脚本位于 `tools/generate_myo_wave_frames.ps1`，详细维护说明见 `developer_maintenance/frontend/feature-onboarding.md` 与 `developer_maintenance/frontend/app-entry.md`。

@@ -66,6 +66,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/animations/cat_wave_transparent_2s.webm
+    - assets/animations/myo_wave_frames/
     - assets/images/cat_app_avatar_v1.png
     - assets/images/badges/
 

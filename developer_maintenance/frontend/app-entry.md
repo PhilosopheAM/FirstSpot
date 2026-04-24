@@ -11,19 +11,29 @@
 | 路径 | 作用 |
 |---|---|
 | `testapp/lib/main.dart` | `main()` 入口；`MyApp` 根部件；`home: FirstOpenGatePage()` |
-| `testapp/lib/features/onboarding/pages/first_open_gate_page.dart` | 首开判断分流页，根据 `OnboardingPreferencesService.shouldShowOnboarding()` 决定走 `OnboardingFlowPage` 还是 `HomeDashboardPage` |
+| `testapp/lib/features/onboarding/pages/first_open_gate_page.dart` | 首开判断分流页；先播放启动动效，再根据 `OnboardingPreferencesService.shouldShowOnboarding()` 决定走 `OnboardingFlowPage` 还是 `HomeDashboardPage` |
+| `testapp/lib/features/onboarding/pages/avatar_launch_page.dart` | 启动动效页；播放透明 PNG 序列帧版 Myo 招手动画 |
 
 ## 路由决策
 
 ```text
 启动
   └─ FirstOpenGatePage.initState()
+       ├─ 显示 AvatarLaunchPage（Myo 招手启动动效）
        └─ OnboardingPreferencesService.shouldShowOnboarding()
             ├─ true  → OnboardingFlowPage
             └─ false → HomeDashboardPage
 ```
 
 Loading 态：`CircularProgressIndicator` + 绿色 `#1FA95B`，背景 `#F7FAF8`。
+
+## 启动动效约定
+
+- 当前动效不是透明视频，而是“透明 PNG 序列帧逐帧播放”
+- 动效资源位于 `testapp/assets/animations/myo_wave_frames/`
+- 动效生成脚本位于 `tools/generate_myo_wave_frames.ps1`
+- 这样做的原因是 Flutter / Android 对透明 `.webm` 的 alpha 通道支持不稳定，曾出现黑底方块
+- 后续若需要调整招手动作，优先改脚本和帧资源，不要先改路由层逻辑
 
 ## 主题
 
@@ -44,3 +54,4 @@ Loading 态：`CircularProgressIndicator` + 绿色 `#1FA95B`，背景 `#F7FAF8`�
 ## 变更日志
 
 - 2026-04-20: 初始化文档；当前分流逻辑由 `FirstOpenGatePage` 承担。
+- 2026-04-24: 增加启动动效说明；首开分流现在会先显示 `AvatarLaunchPage`，其实现为透明 PNG 序列帧逐帧播放。

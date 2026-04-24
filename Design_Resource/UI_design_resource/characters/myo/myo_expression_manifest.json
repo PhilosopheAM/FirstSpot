@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "characterId": "myo",
+  "characterNameZh": "喵",
+  "characterNameEn": "Myo",
+  "styleNotes": [
+    "thick black hand-drawn outline",
+    "off-white base",
+    "mint-green background accent",
+    "square 1:1 composition",
+    "friendly financial-learning mascot"
+  ],
+  "sourceReference": "创意参考图/小猫app-avatar-v1.png",
+  "expressions": [
+    {
+      "id": "default_smile",
+      "titleZh": "默认微笑",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_default_smile.png",
+      "uiUseCases": ["welcome", "dashboard", "default_idle"],
+      "tone": "warm_friendly"
+    },
+    {
+      "id": "wink",
+      "titleZh": "眨眼",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_wink.png",
+      "uiUseCases": ["micro_feedback", "easter_egg", "tap_response"],
+      "tone": "playful"
+    },
+    {
+      "id": "cheer",
+      "titleZh": "欢呼",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_cheer.png",
+      "uiUseCases": ["level_clear", "reward_reveal", "streak_milestone"],
+      "tone": "celebration"
+    },
+    {
+      "id": "clap",
+      "titleZh": "鼓掌",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_clap.png",
+      "uiUseCases": ["correct_answer", "task_complete", "card_saved"],
+      "tone": "positive_feedback"
+    },
+    {
+      "id": "thinking",
+      "titleZh": "托腮思考",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_thinking.png",
+      "uiUseCases": ["guided_question", "explanation", "reflection"],
+      "tone": "curious"
+    },
+    {
+      "id": "sneak_peek",
+      "titleZh": "偷偷瞄",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_sneak_peek.png",
+      "uiUseCases": ["side_hint", "light_reminder", "playful_toast"],
+      "tone": "mischievous"
+    },
+    {
+      "id": "flat_deadpan",
+      "titleZh": "装死躺平",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_flat_deadpan.png",
+      "uiUseCases": ["soft_fail", "fatigue_joke", "retry_state"],
+      "tone": "comedic_defeat"
+    },
+    {
+      "id": "crying",
+      "titleZh": "流泪",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_crying.png",
+      "uiUseCases": ["streak_lost", "missed_goal", "empathetic_feedback"],
+      "tone": "sad_soft"
+    },
+    {
+      "id": "angry_scam_alert",
+      "titleZh": "愤怒",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_angry_scam_alert.png",
+      "uiUseCases": ["scam_warning", "risk_alert", "danger_notice"],
+      "tone": "protective_alert"
+    },
+    {
+      "id": "sleeping",
+      "titleZh": "睡觉",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_sleeping.png",
+      "uiUseCases": ["inactive_7_days", "night_mode", "quiet_state"],
+      "tone": "sleepy"
+    },
+    {
+      "id": "sunglasses",
+      "titleZh": "戴墨镜",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_sunglasses.png",
+      "uiUseCases": ["gold_card", "rare_reward", "achievement_showoff"],
+      "tone": "cool_confident"
+    },
+    {
+      "id": "birthday_hat",
+      "titleZh": "戴生日帽",
+      "assetPath": "Design_Resource/UI_design_resource/characters/myo/myo_birthday_hat.png",
+      "uiUseCases": ["anniversary", "birthday_event", "commemorative_popup"],
+      "tone": "festive"
+    }
+  ]
+}
