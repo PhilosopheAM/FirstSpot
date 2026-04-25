@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class OnboardingPreferencesService {
   static const String _keyCompletedOnboarding = 'hasCompletedOnboarding';
   static const String _keySkippedOnboarding = 'hasSkippedOnboarding';
+  static const String _keyDiscoveredMyoEasterEgg = 'hasDiscoveredMyoEasterEgg';
 
   /// 判断是否需要展示首开引导
   Future<bool> shouldShowOnboarding() async {
@@ -36,5 +37,15 @@ class OnboardingPreferencesService {
   Future<void> markOnboardingSkipped() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keySkippedOnboarding, true);
+  }
+
+  Future<bool> hasDiscoveredMyoEasterEgg() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyDiscoveredMyoEasterEgg) ?? false;
+  }
+
+  Future<void> markMyoEasterEggDiscovered() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyDiscoveredMyoEasterEgg, true);
   }
 }

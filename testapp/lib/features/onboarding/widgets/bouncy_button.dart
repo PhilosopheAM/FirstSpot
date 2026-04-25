@@ -20,6 +20,7 @@ class BouncyButton extends StatefulWidget {
     this.shadowColor = const Color(0xFF188246),
     this.disabledColor = const Color(0xFFE5E9EC),
     this.disabledShadowColor = const Color(0xFFC0C7CD),
+    this.width,
     this.height = 56.0,
     this.borderRadius = 16.0,
     this.depth = 6.0,
@@ -31,6 +32,7 @@ class BouncyButton extends StatefulWidget {
   final Color shadowColor;
   final Color disabledColor;
   final Color disabledShadowColor;
+  final double? width;
   final double height;
   final double borderRadius;
   final double depth;
@@ -96,9 +98,8 @@ class _BouncyButtonState extends State<BouncyButton>
         animation: _animation,
         builder: (context, child) {
           final dy = _animation.value;
-          final currentDepth = widget.depth - dy;
-
           return SizedBox(
+            width: widget.width,
             height: widget.height + widget.depth,
             child: Stack(
               children: [

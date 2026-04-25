@@ -11,7 +11,8 @@ testapp/lib/features/stock_insight/
 ├── pages/
 │   └── stock_insight_template_page.dart   # 顶级页面，装配 UI + 数据服务
 ├── widgets/
-│   └── price_fluctuation_chart.dart       # 日线走势图组件
+│   ├── price_fluctuation_chart.dart       # 日线走势图组件（旧版）
+│   └── price_fluctuation_chart_v2.dart    # 日线走势图组件（新版，优先使用，支持手势交互与降采样）
 ├── domain/
 │   └── stock_insight_models.dart          # SecurityProfile / PricePoint / CompanyInfoCategory / GlossaryItem / StockInsightViewData
 └── data/
@@ -45,7 +46,8 @@ testapp/lib/features/stock_insight/
 
 ### 组件
 
-- `PriceFluctuationChart`：接收 `List<PricePoint>`，绘制价格曲线。
+- `PriceFluctuationChartV2`（**推荐**）：接收 `List<PricePoint>`，绘制支持横向滑动、缩放调节和算法平滑的自适应价格曲线。在需要走势图组件时，优先使用此最新版本。
+- `PriceFluctuationChart`（旧版）：基础版价格曲线绘制，主要做向下兼容或极其简单的无交互图表场景。
 
 ## 依赖关系
 

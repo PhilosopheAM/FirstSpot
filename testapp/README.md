@@ -1,32 +1,40 @@
 # testapp
 
-A new Flutter project.
+Flutter prototype for FirstSpot onboarding and dashboard flows.
 
-## Getting Started
+## Current onboarding opening
 
-This project is a starting point for a Flutter application.
+The app no longer uses a standalone splash / hatch transition before onboarding.
 
-A few resources to get you started if this is your first Flutter project:
+- First entry goes directly to `Onboarding_01_Welcome`
+- Entry gate: `lib/features/onboarding/pages/first_open_gate_page.dart`
+- Onboarding container: `lib/features/onboarding/pages/onboarding_flow_page.dart`
+- Welcome page: `lib/features/onboarding/widgets/onboarding_welcome_step.dart`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Myo welcome media
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Welcome video: `assets/animations/myo_waving_welcome.mp4`
+- Welcome tap sound: `assets/audio/myo_meow_short.mp3`
 
-## Myo Launch Animation
+Behavior on `Onboarding_01_Welcome`:
 
-The app launch animation is currently implemented as a transparent PNG frame sequence instead of a transparent `.webm`.
+- Myo loops inside the green circular frame
+- Tapping the green circle keeps the video unchanged
+- The tap triggers the first-interaction easter egg once
+- The tap also plays the Myo meow sound
 
-- Player entry: `lib/features/onboarding/pages/avatar_launch_page.dart`
-- Frame assets: `assets/animations/myo_wave_frames/`
-- Frame generator: `../tools/generate_myo_wave_frames.ps1`
-- Source character image: `../remotion-avatar/public/cat-avatar-transparent.png`
+## Investor education path
 
-Why this exists:
+The dashboard course card opens the `learning_guidance` feature:
 
-- Transparent `.webm` playback previously produced a black square background on Flutter/Android.
-- The frame-sequence approach is more stable and keeps only the Myo line art plus pink tongue visible over the launch background.
+- Entry page: `lib/features/learning_guidance/pages/guidance_learning_page.dart`
+- Static lesson data: `lib/features/learning_guidance/data/guidance_lessons.dart`
+- Reusable quiz widget: `lib/features/learning_guidance/widgets/myo_practice_block.dart`
+- Chapter card assets: `assets/images/guidance_cards/`
 
-If you want to tweak the waving motion, regenerate the PNG frames first, then keep `avatar_launch_page.dart` in sync with the frame list.
+## Onboarding lesson media
+
+The mini lesson uses farming-metaphor assets registered in `pubspec.yaml`:
+
+- Images: `assets/images/idle_money_coin.png`, `assets/images/planted_sprout.png`, `assets/images/harvest_basket.png`
+- Audio: `assets/audio/seed_plant.wav`, `assets/audio/basket_drop.wav`, `assets/audio/heart_break_soft.wav`

@@ -10,6 +10,11 @@
 testapp/lib/
 ├── main.dart                       # 应用入口，装配 MaterialApp
 └── features/
+    ├── learning_guidance/          # 投资者教育 12 章课程
+    │   ├── pages/                  #   章节列表 / 详情页
+    │   ├── widgets/                #   Myo 练习组件
+    │   ├── domain/                 #   章节 / 题库模型
+    │   └── data/                   #   12 章静态内容与题库
     ├── onboarding/                 # 首开引导
     │   ├── pages/                  #   顶级路由页
     │   ├── widgets/                #   仅本 feature 使用的组件
@@ -39,6 +44,7 @@ testapp/lib/
 |---|---|---|
 | 应用入口 & 首开分流 | `lib/main.dart` + `features/onboarding/pages/first_open_gate_page.dart` | `app-entry.md` |
 | 首开引导 | `features/onboarding/` | `feature-onboarding.md` |
+| 投资者教育课程 | `features/learning_guidance/` | `feature-learning-guidance.md` |
 | 个股信息页 | `features/stock_insight/` | `feature-stock-insight.md` |
 
 ## 新增 feature 的流程
@@ -52,3 +58,4 @@ testapp/lib/
 ## 变更日志
 
 - 2026-04-20: 初始化文档；当前两个 feature：onboarding、stock_insight。
+- 2026-04-25: 新增 `learning_guidance` feature，用于承载 12 章投资者教育课程、题库与 Myo 反馈练习。

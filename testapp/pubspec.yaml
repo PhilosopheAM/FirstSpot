@@ -40,6 +40,8 @@ dependencies:
   firebase_analytics: ^12.0.3
   shared_preferences: ^2.2.2
   fl_chart: ^1.1.1
+  video_player: ^2.9.2
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -65,10 +67,25 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/animations/cat_wave_transparent_2s.webm
-    - assets/animations/myo_wave_frames/
+    - assets/animations/myo_waving_welcome.mp4
+    - assets/audio/myo_meow_short.mp3
+    - assets/audio/basket_drop.wav
+    - assets/audio/heart_break_soft.wav
+    - assets/audio/seed_plant.wav
+    - assets/audio/guidance_concept_reveal.wav
+    - assets/audio/guidance_case_slide.wav
+    - assets/audio/guidance_interaction_ready.wav
+    - assets/audio/guidance_passport_stamp.wav
+    - assets/audio/guidance_next_unlock.wav
+    - assets/audio/guidance_finale_12_cards.wav
     - assets/images/cat_app_avatar_v1.png
+    - assets/images/harvest_basket.png
+    - assets/images/idle_money_coin.png
+    - assets/images/planted_sprout.png
+    - assets/images/characters/myo/
     - assets/images/badges/
+    - assets/images/guidance_cards/
+    - assets/images/learning_guidance/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

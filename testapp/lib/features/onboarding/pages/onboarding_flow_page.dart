@@ -1,13 +1,12 @@
-/// Last Updated: 2026-04-10
-/// 最后更新: 2026-04-10
+/// Last Updated: 2026-04-21
+/// 最后更新: 2026-04-21
 ///
 /// Module: Onboarding Flow Page - the container for all steps
-/// 模块: 首开引导流程页 - 串联所有步骤的容器
+/// 模块: 首开引导流程页 - 串联所有步骤的容器 (6步游戏化)
 ///
 /// Dependencies: flutter/material.dart, all onboarding steps, onboarding_preferences_service
-/// 依赖: flutter/material.dart, onboarding_welcome_step, onboarding_profile_step, onboarding_lesson_step, onboarding_starter_plan_step, onboarding_preferences_service
 ///
-/// Author: Harry Chen
+/// Author: AI
 /// Email: 11911421@mail.sustech.edu.cn
 
 import 'package:flutter/material.dart';
@@ -15,10 +14,11 @@ import 'package:flutter/material.dart';
 import '../data/onboarding_preferences_service.dart';
 import '../domain/onboarding_models.dart';
 import 'home_dashboard_page.dart';
-import '../widgets/onboarding_lesson_step.dart';
-import '../widgets/onboarding_profile_step.dart';
-import '../widgets/onboarding_starter_plan_step.dart';
 import '../widgets/onboarding_welcome_step.dart';
+import '../widgets/onboarding_profile_step.dart';
+import '../widgets/onboarding_lesson_step.dart';
+import '../widgets/onboarding_starter_plan_step.dart';
+import '../widgets/onboarding_reward_reveal_step.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({super.key});
@@ -40,7 +40,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
 
   void _nextPage() {
     _pageController.nextPage(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
       curve: Curves.easeInOut,
     );
   }
@@ -75,6 +75,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
             onNext: _nextPage,
             onSkip: _skipOnboarding,
           ),
+          // 02_Profile_Lite
           OnboardingProfileLiteStep(
             answers: _answers,
             onAnswersChanged: (OnboardingProfileAnswers newAnswers) {
@@ -82,11 +83,17 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
             },
             onNext: _nextPage,
           ),
+          // 03_Mini_Lesson
           OnboardingMiniLessonStep(
             onNext: _nextPage,
           ),
+          // 04_Starter_Plan
           OnboardingStarterPlanStep(
             answers: _answers,
+            onComplete: _nextPage, // 改为跳到下一步(Reward Reveal)
+          ),
+          // 05_Reward_Reveal
+          OnboardingRewardRevealStep(
             onComplete: _completeOnboarding,
           ),
         ],

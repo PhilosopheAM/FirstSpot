@@ -1,20 +1,22 @@
-/// Last Updated: 2026-04-10
-/// 最后更新: 2026-04-10
-///
-/// Module: Home Dashboard Page - the minimum viable homepage after onboarding
-/// 模块: 首页仪表盘 - 引导结束后的最小可用首页
-///
-/// Dependencies: flutter/material.dart, stock_insight_template_page, shared_preferences
-/// 依赖: flutter/material.dart, stock_insight_template_page, shared_preferences
-///
-/// Author: Harry Chen
-/// Email: 11911421@mail.sustech.edu.cn
+﻿// Last Updated: 2026-04-25
+// 最后更新: 2026-04-25
+//
+// Module: Home Dashboard Page - the minimum viable homepage after onboarding
+// 模块: 首页仪表盘 - 引导结束后的最小可用首页
+//
+// Dependencies: flutter/material.dart, learning guidance, stock insight, shared_preferences, vault page
+// 依赖: flutter/material.dart, 投资者教育课程, 个股信息页, shared_preferences, 金库页
+//
+// Author: Harry Chen
+// Email: 11911421@mail.sustech.edu.cn
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../learning_guidance/pages/guidance_learning_page.dart';
 import '../../stock_insight/pages/stock_insight_template_page.dart';
 import '../widgets/task_card.dart';
 import 'first_open_gate_page.dart';
+import 'vault_page.dart';
 
 class HomeDashboardPage extends StatelessWidget {
   const HomeDashboardPage({super.key});
@@ -58,7 +60,7 @@ class HomeDashboardPage extends StatelessWidget {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -73,10 +75,7 @@ class HomeDashboardPage extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(
                 '我们为你准备了今日新手任务',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Color(0xFF5D696F),
-                ),
+                style: TextStyle(fontSize: 15, color: Color(0xFF5D696F)),
               ),
               const SizedBox(height: 32),
               TaskCard(
@@ -94,10 +93,90 @@ class HomeDashboardPage extends StatelessWidget {
               const SizedBox(height: 16),
               TaskCard(
                 title: '继续新手村课程',
-                description: '每天5分钟，学习看懂钱的游戏规则',
-                buttonText: '未开放',
-                isLocked: true,
-                onTap: () {},
+                description: '12章投资者教育，Myo陪你从市场规则学到稳健组合',
+                buttonText: '开始学习',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const GuidanceLearningPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 18),
+          color: const Color(0xFFF7FAF8),
+          child: Center(
+            heightFactor: 1,
+            child: _VaultEntryButton(
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const VaultPage(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _VaultEntryButton extends StatelessWidget {
+  const _VaultEntryButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          width: 76,
+          height: 72,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFFFB547), width: 2),
+            boxShadow: <BoxShadow>[
+              BoxShadow(
+                color: const Color(0xFFB45309).withValues(alpha: 0.12),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(
+                height: 28,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Text('🏛️', style: TextStyle(height: 1)),
+                ),
+              ),
+              SizedBox(height: 4),
+              Text(
+                '金库',
+                style: TextStyle(
+                  color: Color(0xFFB45309),
+                  fontSize: 12,
+                  height: 1,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
@@ -106,4 +185,3 @@ class HomeDashboardPage extends StatelessWidget {
     );
   }
 }
-

@@ -21,6 +21,7 @@ FirstSpot/
 ├── .cursor/                  # Cursor 规则、技能、计划
 ├── README.md                 # 项目简介
 ├── LICENSE                   # 开源协议
+├── .gitignore                # 根目录临时验证产物忽略规则
 └── PROJECT_STRUCTURE.md      # 本文档
 ```
 
@@ -46,8 +47,15 @@ datafetcher/
 ```text
 testapp/
 ├── lib/                      # Dart 源代码（应用主体）
-│   └── features/             #   按业务模块切分（如 onboarding/）
+│   └── features/             #   按业务模块切分
+│       ├── learning_guidance/ #     投资者教育 12 章课程、题库与 Myo 练习反馈
+│       ├── onboarding/       #     首开引导与首页
+│       └── stock_insight/    #     个股信息页
 ├── test/                     # Flutter 测试
+├── assets/audio/             # App 内音效；含 onboarding 与 learning_guidance 音频
+├── assets/images/characters/myo/ # Myo 表情素材，供学习讲解与反馈复用
+├── assets/images/guidance_cards/ # 投资者教育 12 章线条风格卡片图
+├── assets/images/learning_guidance/ # 投资者教育章末练习背景与通过/重练插画
 ├── android/ ios/ web/ windows/ macos/ linux/   # 各平台工程
 ├── pubspec.yaml              # Flutter 依赖声明
 └── README.md                 # 前端启动说明
@@ -77,7 +85,10 @@ UX-Product-Design/
     ├── 09_固收与现金管理.md
     ├── 10_情绪陷阱与行为偏差.md
     ├── 11_定投与长期主义.md
-    └── 12_搭建你的稳健组合.md
+    ├── 12_搭建你的稳健组合.md
+    ├── 13_12章练习交互细化与素材清单.md #   12 章 Myo 对话、题库审计与素材提示词
+    ├── 14_先教育再小测学习闭环与素材补全记录.md # V1.2 学习闭环与素材缺口维护记录
+    └── 15_12章概念聊天对话与首章实装.md # 12 章概念聊天脚本模式与 CH01 实装记录
 ```
 
 职责：产品设计文档、用户流程、交互草案、版本迭代记录。新版本开 `V2/`、`V3/` 子目录。
@@ -88,17 +99,22 @@ UX-Product-Design/
 ```text
 Design_Resource/
 ├── UI_design_resource/       # UI 美术资源
+│   ├── guidance_cards/       #   投资者教育 12 章线条风格主视觉与预览拼图
+│   ├── learning_guidance/    #   投资者教育章末练习背景图、通过页与重练页插画
 │   └── reference/            #   创意参考图 / 灵感板
 └── Sound_design_resource/    # 音效 / 音频资源
+    ├── guidance_*.wav        # 投资者教育学习闭环实装音效
+    └── guidance_learning_audio_prompts.md # 投资者教育学习闭环缺失音效提示词
 ```
 
-- **`UI_design_resource/`**：所有通过图像生成模型（Nano Banana、Midjourney 等）产出的 UI 资源统一放这里。代码中引用 UI 图片一律指向此目录。
-- **`Sound_design_resource/`**：软件内所有音效、BGM、语音片段。前端 `testapp/` 加载音频时从此处引用或拷贝到 `assets/`。
-- **`reference/`**：非成品的创意参考图 / 灵感板（不直接进入产品）。
+- `**UI_design_resource/**`：所有通过图像生成模型（Nano Banana、Midjourney 等）产出的 UI 资源统一放这里。代码中引用 UI 图片一律指向此目录。
+- `**Sound_design_resource/**`：软件内所有音效、BGM、语音片段。前端 `testapp/` 加载音频时从此处引用或拷贝到 `assets/`。
+- `**reference/**`：非成品的创意参考图 / 灵感板（不直接进入产品）。
 
 ### 2.5 `Reading_Material/` — 参考文献
 
 存放论文 / 专著 PDF，供产品与技术决策参考。当前收录：
+
 - `designing-user-experience-a-guide-to-hci-ux-and-interaction-design.pdf`
 - `Internet of Gamification A Review of Literature on IoT enabled Gamification for User Engagement.pdf`
 
@@ -118,6 +134,7 @@ developer_maintenance/
 └── frontend/                 # 前端功能文档（按 feature 划分）
     ├── _overview.md
     ├── app-entry.md
+    ├── feature-learning-guidance.md
     ├── feature-onboarding.md
     └── feature-stock-insight.md
 ```
@@ -137,11 +154,14 @@ developer_maintenance/
 
 ## 3. 根目录文件清单
 
-| 文件 | 用途 | 是否入 Git |
-|---|---|---|
-| `README.md` | 项目简介 | 是 |
-| `LICENSE` | 开源协议 | 是 |
-| `PROJECT_STRUCTURE.md` | 本文档 | 是 |
+
+| 文件                     | 用途            | 是否入 Git |
+| ---------------------- | ------------- | ------- |
+| `README.md`            | 项目简介          | 是       |
+| `LICENSE`              | 开源协议          | 是       |
+| `.gitignore`           | 根目录临时验证产物忽略规则 | 是       |
+| `PROJECT_STRUCTURE.md` | 本文档           | 是       |
+
 
 根目录**不允许**存放：临时测试文件、运行日志、个人 dump、散落图片 / 音频。若发现违规，按第 4 节规则归位后更新本文档。
 
@@ -149,15 +169,17 @@ developer_maintenance/
 
 ## 4. 新产物归属决策表
 
-| 新产物类型 | 必须放入 |
-|---|---|
-| 图像生成模型输出（PNG/JPG/SVG） | `Design_Resource/UI_design_resource/` |
+
+| 新产物类型                      | 必须放入                                     |
+| -------------------------- | ---------------------------------------- |
+| 图像生成模型输出（PNG/JPG/SVG）      | `Design_Resource/UI_design_resource/`    |
 | 音效 / BGM / 语音（MP3/WAV/OGG） | `Design_Resource/Sound_design_resource/` |
-| Python 后端代码 | `datafetcher/app/` |
-| Flutter 前端代码 | `testapp/lib/features/<feature>/` |
-| UX 设计文档 | `UX-Product-Design/V<N>/` |
-| 参考文献 PDF | `Reading_Material/` |
-| Cursor 规则 `.mdc` | `.cursor/rules/` |
+| Python 后端代码                | `datafetcher/app/`                       |
+| Flutter 前端代码               | `testapp/lib/features/<feature>/`        |
+| UX 设计文档                    | `UX-Product-Design/V<N>/`                |
+| 参考文献 PDF                   | `Reading_Material/`                      |
+| Cursor 规则 `.mdc`           | `.cursor/rules/`                         |
+
 
 ---
 
@@ -172,3 +194,15 @@ developer_maintenance/
 - 2026-04-20: 新增 `UX-Product-Design/guidance/` 投资者教育学习框架目录，含 1 份总览 + 12 章内容脚本（配套重要概念卡片 CARD-01 ~ CARD-12，按白/蓝/紫/金四级稀有度分布）。
 - 2026-04-21: 新增 `UX-Product-Design/V1/Gamified_Onboarding_Design.md` 游戏化首开引导设计文档（Duolingo-inspired，Gen Z 16-28 目标人群，定义 Myo（喵）IP / FP-XP / Streak / 耐心值 / 双货币 / 成长小组 / 成就墙 / 小金库路径 / Myo 推送人格 共 10 大机制 + 6 步首开流程）。
 - 2026-04-24: 首开启动动效改为 `testapp/assets/animations/myo_wave_frames/` 透明 PNG 序列帧逐帧播放方案；生成脚本位于 `tools/generate_myo_wave_frames.ps1`，详细维护说明见 `developer_maintenance/frontend/feature-onboarding.md` 与 `developer_maintenance/frontend/app-entry.md`。
+- 2026-04-25: 导入并处理了缺失的音效和图像素材（去底透明化），存放在 `Design_Resource/` 并同步至 `testapp/assets/`。更新了 `onboarding_lesson_step.dart` 以使用真实素材。重构了 `onboarding_lesson_step.dart`，将其全部 3 个关卡的交互统一为类似微信的连续聊天流（Chat Flow）形式，增强了交互反馈感。
+- 2026-04-25: 新增 `UX-Product-Design/guidance/13_12章练习交互细化与素材清单.md`，集中维护 12 章 Myo 对话叙事、章末练习固定交互、48 道题库审计与缺失素材提示词。
+- 2026-04-25: 新增 `testapp/lib/features/learning_guidance/` 投资者教育课程模块，接入 12 章内容、48 道练习与 `assets/images/guidance_cards/` 线条风格素材；新增 `developer_maintenance/frontend/feature-learning-guidance.md`。
+- 2026-04-25: 新增根目录 `.gitignore`，忽略 Dart/Flutter 沙箱验证产生的 `.dart_appdata/` 临时目录。
+- 2026-04-25: 更新 `.cursor/rules/firstspot-developer-maintenance.mdc`，强化“所有代码路径必须定位模块文档并同步维护”的规则；清理根目录临时素材处理脚本 `process_assets.py`。
+- 2026-04-25: 新增 `testapp/lib/features/onboarding/widgets/xp_flyup.dart`，统一 onboarding 内 `+N XP` 右上角向上飘动奖励反馈，替代底部 SnackBar。
+- 2026-04-25: 新增 `UX-Product-Design/guidance/14_先教育再小测学习闭环与素材补全记录.md` 与 `Design_Resource/Sound_design_resource/guidance_learning_audio_prompts.md`，记录 12 章投资者教育“先教育、再小测、奖励通行证”闭环、缺失美术提示词和音频提示词。
+- 2026-04-25: 复制 Myo 表情素材到 `testapp/assets/images/characters/myo/`，新增学习页金融术语高亮解释组件与术语表文件。
+- 2026-04-25: 从 `T:\Tempo_Files\FirstSpot_Assets` 导入 6 个 `guidance_*.wav` 投资者教育学习闭环音效，归档到 `Design_Resource/Sound_design_resource/` 并同步到 `testapp/assets/audio/` 接入前端播放。
+- 2026-04-25: 从 `T:\Tempo_Files\FirstSpot_Assets` 导入 8 张投资者教育章末练习图片，归档到 `Design_Resource/UI_design_resource/learning_guidance/` 并同步到 `testapp/assets/images/learning_guidance/`。
+- 2026-04-25: 新增 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 与 `guidance_concept_dialogues.dart`，维护 12 章概念聊天脚本，并在 CH01 概念卡实装 Myo 聊天框入口、上方飞入动画、返回续学和术语词卡解释。
+- 2026-04-25: 新增 `testapp/lib/features/onboarding/pages/vault_page.dart`，在首开完成后的用户主页底部提供 `🏛️ 金库` 入口，用于左右滑动查看已获得概念卡。
