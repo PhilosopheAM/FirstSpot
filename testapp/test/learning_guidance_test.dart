@@ -53,7 +53,9 @@ void main() {
     expect(find.textContaining('Myo 先拆开一个常见误会'), findsOneWidget);
 
     await tester.tap(find.text('所以更像二手转让？'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    expect(find.text('...'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 8));
     expect(find.textContaining('演唱会票'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
@@ -202,9 +204,34 @@ void main() {
 
     expect(find.textContaining('已经发行出来的股票'), findsNothing);
   });
+
+  testWidgets('Completed concept chat praises user and returns to lesson', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const MaterialApp(home: GuidanceLearningPage()));
+    await tester.pump();
+
+    await tester.tap(find.textContaining('什么是二级市场'));
+    await tester.pumpAndSettle();
+    await _completeChapterOneConceptChat(tester, closeAfterComplete: false);
+
+    expect(find.textContaining('太棒了，你已经了解了第 1 章'), findsOneWidget);
+    expect(find.text('返回章节'), findsOneWidget);
+
+    await tester.tap(find.text('返回章节'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('复习概念对话'), findsOneWidget);
+  });
 }
 
-Future<void> _completeChapterOneConceptChat(WidgetTester tester) async {
+Future<void> _completeChapterOneConceptChat(
+  WidgetTester tester, {
+  bool closeAfterComplete = true,
+}) async {
   await tester.tap(find.text('进入概念对话'));
   await tester.pumpAndSettle();
 
@@ -218,10 +245,13 @@ Future<void> _completeChapterOneConceptChat(WidgetTester tester) async {
     '我能总结为“投资者之间转让”。',
   ]) {
     await tester.tap(find.text(optionText));
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump();
   }
 
-  expect(find.textContaining('概念对话已完成'), findsOneWidget);
-  await tester.tap(find.byIcon(Icons.arrow_back_rounded));
-  await tester.pumpAndSettle();
+  expect(find.textContaining('太棒了，你已经了解了第 1 章'), findsOneWidget);
+  if (closeAfterComplete) {
+    await tester.tap(find.text('返回章节'));
+    await tester.pumpAndSettle();
+  }
 }

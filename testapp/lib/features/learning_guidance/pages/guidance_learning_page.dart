@@ -31,14 +31,21 @@ class GuidanceLearningPage extends StatefulWidget {
 
 class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     with SingleTickerProviderStateMixin {
+  static const Duration _conceptMyoThinkingDelay = Duration(milliseconds: 600);
+
   final AudioPlayer _audioPlayer = AudioPlayer();
   late final AnimationController _conceptChatController;
+  final ScrollController _conceptChatScrollController = ScrollController();
 
   GuidanceLesson? _selectedLesson;
   GuidanceLesson? _activeConceptLesson;
   final Map<String, Set<int>> _completedLearningSteps = <String, Set<int>>{};
   final Map<String, List<String>> _conceptDialogueSelections =
       <String, List<String>>{};
+  final Map<String, int> _conceptRevealedResponseCounts = <String, int>{};
+  final Map<String, int> _conceptAdvancedTurnCounts = <String, int>{};
+  String? _conceptTypingKey;
+  int _conceptRevealToken = 0;
   late final Map<String, _TermFirstOccurrence> _firstTermOccurrences =
       _buildFirstTermOccurrences();
 
@@ -47,8 +54,8 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     super.initState();
     _conceptChatController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 360),
-      reverseDuration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 420),
+      reverseDuration: const Duration(milliseconds: 420),
     );
     unawaited(_configureAudioPlayer());
   }
@@ -56,6 +63,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   @override
   void dispose() {
     _conceptChatController.dispose();
+    _conceptChatScrollController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -110,11 +118,11 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
 
   Widget _buildConceptChatRoute(GuidanceLesson lesson) {
     final Animation<Offset> slideAnimation =
-        Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero).animate(
+        Tween<Offset>(begin: const Offset(0, -1.08), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _conceptChatController,
             curve: Curves.easeOutCubic,
-            reverseCurve: Curves.easeInCubic,
+            reverseCurve: Curves.easeInBack,
           ),
         );
 
@@ -197,6 +205,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
                 child: ListView(
+                  controller: _conceptChatScrollController,
                   padding: const EdgeInsets.fromLTRB(16, 18, 16, 20),
                   children: <Widget>[
                     _buildChatMyoBubble(
@@ -207,15 +216,17 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
                     const SizedBox(height: 12),
                     for (int i = 0; i < completedTurns; i += 1)
                       ..._buildCompletedConceptTurn(
+                        lesson,
                         dialogue.turns[i],
+                        i,
                         selectedOptionIds[i],
                       ),
-                    if (!isComplete)
+                    if (!isComplete && _canShowNextConceptTurn(lesson))
                       _buildCurrentConceptTurn(
                         lesson,
                         dialogue.turns[completedTurns],
                       )
-                    else
+                    else if (isComplete && _canShowConceptComplete(lesson))
                       _buildConceptCompleteCard(lesson),
                   ],
                 ),
@@ -263,13 +274,22 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   }
 
   List<Widget> _buildCompletedConceptTurn(
+    GuidanceLesson lesson,
     GuidanceConceptTurn turn,
+    int turnIndex,
     String selectedOptionId,
   ) {
     final GuidanceConceptOption selectedOption = turn.options.firstWhere(
       (GuidanceConceptOption option) => option.id == selectedOptionId,
       orElse: () => turn.options.first,
     );
+    final String responseKey = _conceptTurnKey(lesson.id, turnIndex);
+    final List<String> responseSegments = _conceptResponseSegments(
+      selectedOption.myoResponse,
+    );
+    final int visibleResponseCount =
+        _conceptRevealedResponseCounts[responseKey] ?? responseSegments.length;
+    final bool isTyping = _conceptTypingKey == responseKey;
 
     return <Widget>[
       _buildChatMyoBubble(
@@ -279,10 +299,17 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
       const SizedBox(height: 8),
       _buildChatUserBubble(selectedOption.text),
       const SizedBox(height: 8),
-      _buildChatMyoBubble(
-        selectedOption.myoResponse,
-        highlightedTerms: selectedOption.highlightedTerms,
-      ),
+      if (isTyping) ...<Widget>[
+        _buildConceptTypingBubble(),
+        const SizedBox(height: 8),
+      ],
+      for (int i = 0; i < visibleResponseCount; i += 1) ...<Widget>[
+        _buildChatMyoBubble(
+          responseSegments[i],
+          highlightedTerms: selectedOption.highlightedTerms,
+        ),
+        const SizedBox(height: 8),
+      ],
       const SizedBox(height: 16),
     ];
   }
@@ -362,30 +389,42 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   }
 
   Widget _buildConceptCompleteCard(GuidanceLesson lesson) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF8ED8A6), width: 2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Icon(Icons.check_circle_rounded, color: Color(0xFF1FA95B)),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              '概念对话已完成。返回章节学习后，“概念”卡片会保持点亮，接下来可以继续案例和互动。',
-              style: const TextStyle(
-                color: Color(0xFF23302A),
-                height: 1.45,
-                fontWeight: FontWeight.w800,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _buildChatMyoBubble(
+          '太棒了，你已经了解了第 ${lesson.chapterNumber} 章「${lesson.title}」的核心概念。概念卡会保持点亮，接下来可以回到章节继续案例和互动。',
+          highlightedTerms: const <String>{},
+          accent: true,
+        ),
+        const SizedBox(height: 16),
+        Align(
+          alignment: Alignment.center,
+          child: ElevatedButton.icon(
+            onPressed: _closeConceptChat,
+            icon: const Icon(Icons.inventory_2_rounded),
+            label: const Text('返回章节'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1FA95B),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 13),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
               ),
+              textStyle: const TextStyle(fontWeight: FontWeight.w900),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConceptTypingBubble() {
+    return _buildChatMyoBubble(
+      '...',
+      highlightedTerms: const <String>{},
+      accent: true,
     );
   }
 
@@ -1369,13 +1408,167 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     return '进入概念对话';
   }
 
+  String _conceptTurnKey(String lessonId, int turnIndex) {
+    return '$lessonId:$turnIndex';
+  }
+
+  String _conceptCompleteKey(String lessonId) {
+    return '$lessonId:complete';
+  }
+
+  void _scrollConceptChatToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_conceptChatScrollController.hasClients) {
+        return;
+      }
+      _conceptChatScrollController.animateTo(
+        _conceptChatScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  bool _canShowNextConceptTurn(GuidanceLesson lesson) {
+    final int selectedCount = _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    final int advancedCount = _conceptAdvancedTurnCounts[lesson.id] ?? 0;
+    return advancedCount >= selectedCount;
+  }
+
+  bool _canShowConceptComplete(GuidanceLesson lesson) {
+    final String completeKey = _conceptCompleteKey(lesson.id);
+    return _conceptRevealedResponseCounts[completeKey] == 1 &&
+        _conceptTypingKey != completeKey;
+  }
+
+  Duration _conceptSegmentDelay(String text) {
+    final int delayMs = 1000 + (text.length * 18);
+    return Duration(milliseconds: delayMs.clamp(1000, 2500).toInt());
+  }
+
+  List<String> _conceptResponseSegments(String text) {
+    final List<String> rawSegments = text
+        .split(RegExp(r'(?<=[。！？；])'))
+        .map((String segment) => segment.trim())
+        .where((String segment) => segment.isNotEmpty)
+        .toList();
+    if (rawSegments.length <= 1) {
+      return <String>[text];
+    }
+    return rawSegments;
+  }
+
+  Future<void> _revealConceptResponse({
+    required GuidanceLesson lesson,
+    required int turnIndex,
+    required GuidanceConceptOption option,
+  }) async {
+    final int token = ++_conceptRevealToken;
+    final String turnKey = _conceptTurnKey(lesson.id, turnIndex);
+    final List<String> segments = _conceptResponseSegments(option.myoResponse);
+
+    setState(() {
+      _conceptRevealedResponseCounts[turnKey] = 0;
+      _conceptTypingKey = turnKey;
+    });
+    _scrollConceptChatToBottom();
+
+    await Future<void>.delayed(_conceptMyoThinkingDelay);
+    if (!mounted || token != _conceptRevealToken) {
+      return;
+    }
+
+    for (int i = 0; i < segments.length; i += 1) {
+      setState(() {
+        _conceptTypingKey = null;
+        _conceptRevealedResponseCounts[turnKey] = i + 1;
+      });
+      _scrollConceptChatToBottom();
+
+      if (i < segments.length - 1) {
+        await Future<void>.delayed(_conceptSegmentDelay(segments[i]));
+        if (!mounted || token != _conceptRevealToken) {
+          return;
+        }
+      }
+    }
+
+    setState(() {
+      _conceptAdvancedTurnCounts[lesson.id] = turnIndex + 1;
+    });
+    _scrollConceptChatToBottom();
+    unawaited(_maybeRevealConceptComplete(lesson, token));
+  }
+
+  Future<void> _maybeRevealConceptComplete(
+    GuidanceLesson lesson,
+    int token,
+  ) async {
+    final GuidanceConceptDialogue? dialogue =
+        guidanceConceptDialogues[lesson.chapterNumber];
+    if (dialogue == null) {
+      return;
+    }
+    final int selectedCount = _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    if (selectedCount < dialogue.turns.length ||
+        (_conceptAdvancedTurnCounts[lesson.id] ?? 0) < dialogue.turns.length) {
+      return;
+    }
+
+    final String completeKey = _conceptCompleteKey(lesson.id);
+    if (_conceptRevealedResponseCounts[completeKey] == 1) {
+      return;
+    }
+
+    setState(() => _conceptTypingKey = completeKey);
+    _scrollConceptChatToBottom();
+    await Future<void>.delayed(_conceptMyoThinkingDelay);
+    if (!mounted || token != _conceptRevealToken) {
+      return;
+    }
+    setState(() {
+      _conceptTypingKey = null;
+      _conceptRevealedResponseCounts[completeKey] = 1;
+    });
+    _scrollConceptChatToBottom();
+  }
+
   void _openConceptChat(GuidanceLesson lesson) {
-    setState(() => _activeConceptLesson = lesson);
+    _conceptRevealToken += 1;
+    final GuidanceConceptDialogue? dialogue =
+        guidanceConceptDialogues[lesson.chapterNumber];
+    final int selectedCount = _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    setState(() {
+      _activeConceptLesson = lesson;
+      _conceptTypingKey = null;
+      _conceptAdvancedTurnCounts[lesson.id] = selectedCount;
+      if (dialogue != null) {
+        for (int i = 0; i < selectedCount && i < dialogue.turns.length; i += 1) {
+          final GuidanceConceptTurn turn = dialogue.turns[i];
+          final String? selectedOptionId =
+              _conceptDialogueSelections[lesson.id]?[i];
+          final GuidanceConceptOption selectedOption = turn.options.firstWhere(
+            (GuidanceConceptOption option) => option.id == selectedOptionId,
+            orElse: () => turn.options.first,
+          );
+          _conceptRevealedResponseCounts[_conceptTurnKey(lesson.id, i)] =
+              _conceptResponseSegments(selectedOption.myoResponse).length;
+        }
+      }
+      if (dialogue != null && selectedCount >= dialogue.turns.length) {
+        _conceptRevealedResponseCounts[_conceptCompleteKey(lesson.id)] = 1;
+      }
+    });
     _conceptChatController.forward(from: 0);
+    _scrollConceptChatToBottom();
     unawaited(_playGuidanceAudio(_GuidanceAudio.conceptReveal));
   }
 
   Future<void> _closeConceptChat() async {
+    _conceptRevealToken += 1;
+    if (mounted) {
+      setState(() => _conceptTypingKey = null);
+    }
     await _conceptChatController.reverse();
     if (!mounted) {
       return;
@@ -1395,13 +1588,21 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     }
 
     final bool wasLessonComplete = _isLessonLearningComplete(lesson);
+    final int turnIndex = dialogue.turns.indexWhere(
+      (GuidanceConceptTurn item) => item.id == turn.id,
+    );
+    if (turnIndex < 0 ||
+        _conceptTypingKey != null ||
+        (_conceptRevealedResponseCounts[_conceptTurnKey(lesson.id, turnIndex)] ??
+                0) >
+            0) {
+      return;
+    }
+
     setState(() {
       final List<String> selections = _conceptDialogueSelections.putIfAbsent(
         lesson.id,
         () => <String>[],
-      );
-      final int turnIndex = dialogue.turns.indexWhere(
-        (GuidanceConceptTurn item) => item.id == turn.id,
       );
       if (turnIndex == selections.length) {
         selections.add(option.id);
@@ -1415,6 +1616,16 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         completed.add(0);
       }
     });
+
+    if (turnIndex < (_conceptDialogueSelections[lesson.id]?.length ?? 0)) {
+      unawaited(
+        _revealConceptResponse(
+          lesson: lesson,
+          turnIndex: turnIndex,
+          option: option,
+        ),
+      );
+    }
 
     final bool isDialogueComplete =
         (_conceptDialogueSelections[lesson.id]?.length ?? 0) >=
