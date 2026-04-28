@@ -10,7 +10,7 @@
 | 文件                                                                         | 作用                                                       |
 | -------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `testapp/lib/features/learning_guidance/domain/guidance_models.dart`       | 章节、题目、选项与题型模型                                            |
-| `testapp/lib/features/learning_guidance/data/guidance_concept_dialogues.dart` | 12 章“概念”环节 Myo 聊天式问答脚本；每章 4 个节点、每节点 3 个用户选项 |
+| `testapp/lib/features/learning_guidance/data/guidance_concept_dialogues.dart` | 12 章“概念”环节 Myo 引导式问答脚本；每章 7 个概念路径节点、每节点 3 个用户提问式选项 |
 | `testapp/lib/features/learning_guidance/data/guidance_lessons.dart`        | 12 章课程数据、关键点、Myo 引导语与 48 道练习题                            |
 | `testapp/lib/features/learning_guidance/data/guidance_glossary.dart`       | 金融 / 市场 / 投资术语表，维护新手白话解释、别名匹配和词汇表展示内容                    |
 | `testapp/lib/features/learning_guidance/pages/guidance_learning_page.dart` | 课程列表与章节详情页；目录页负责逐章解锁和词汇表入口；详情页先展示可点亮的概念、案例、互动学习卡，再解锁章末小测 |
@@ -45,11 +45,12 @@ Navigator.of(context).push(
 - 词汇表入口位于课程目录页，只展示已完成学习章节中首次引入的术语；未解锁术语不会出现在复习列表中。
 - 术语高亮采用“全 12 章首次出现”策略：同一个 canonical term 只在从 CH01 到 CH12 顺序扫描到的第一个文本位置以浅蓝词卡样式高亮并可交互，后续重复出现保持普通文本。
 
-### 2026-04-25 概念聊天首章实装补充
+### 2026-04-28 概念路径图重构补充
 
-- 第 1 章“概念”学习步点击后进入 Myo 聊天框；聊天框由上方飞入，左上角返回章节页。
+- CH01-CH12 的“概念”学习步点击后均进入 Myo 聊天框；聊天框由上方飞入，左上角返回章节页。
 - 聊天选择进度保存在 `GuidanceLearningPage` 页面状态中，再次进入会接续上次节点。
-- 12 章脚本统一维护在 `guidance_concept_dialogues.dart`，当前仅 CH01 接入入口验证，CH02-CH12 作为后续批量接入的数据基础。
+- 12 章脚本统一维护在 `guidance_concept_dialogues.dart`，采用“概念路径图”方法：每章 7 个必经节点、每节点 3 个用户提问式选项，选项表达不同但收束到同一教学目标，避免关键概念因分支路径而漏触发。
+- 概念对话的术语首次出现扫描覆盖全部 12 章，不再只扫描 CH01。
 
 ## 依赖关系
 
@@ -59,6 +60,7 @@ Navigator.of(context).push(
 - 图片资源由 `pubspec.yaml` 的 `assets/images/guidance_cards/`、`assets/images/characters/myo/` 与 `assets/images/learning_guidance/` 暴露；音频资源由 `assets/audio/guidance_*.wav` 暴露。
 - `MyoPracticeBlock` 按题型使用单选/匹配背景，按章节奇偶切换通过/重练插画版本，保证 12 章章末小测复用同一套素材规则。
 - 课程内容与设计文档对应 `UX-Product-Design/guidance/13_12章练习交互细化与素材清单.md` 与 `UX-Product-Design/guidance/14_先教育再小测学习闭环与素材补全记录.md`。
+- 12 章概念聊天方法论与路径图对应 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md`。
 
 ## 变更日志
 
@@ -69,4 +71,5 @@ Navigator.of(context).push(
 - 2026-04-25: 导入 6 个 `guidance_*.wav` 学习闭环音效，接入学习卡点亮、章末小测解锁、通行证通过和 CH12 终章奖励。
 - 2026-04-25: 调整术语高亮为浅蓝词卡样式且去掉下划线；新增目录页词汇表复习入口；章节入口改为严格顺序解锁，并补充对应 widget 测试。
 - 2026-04-25: 导入并接入 8 张章末练习图片素材，新增 `assets/images/learning_guidance/` 声明；小测题卡使用题型背景图，结果区使用通过/重练插画。
-- 2026-04-25: 新增 12 章“概念”聊天脚本数据与首章概念聊天框实装；第 1 章概念卡改为 Myo 对话入口，支持上方飞入动画、左上角返回、进度保存、术语词卡解释和完成后自动点亮概念学习步。
+- 2026-04-25: 新增 12 章“概念”聊天脚本数据与 CH01 概念聊天框实装；第 1 章概念卡改为 Myo 对话入口，支持上方飞入动画、左上角返回、进度保存、术语词卡解释和完成后自动点亮概念学习步。
+- 2026-04-28: 将 12 章概念聊天脚本重构为“概念路径图”驱动的 7 节点必经路径，并将概念聊天入口与术语首次出现扫描扩展到 CH01-CH12。

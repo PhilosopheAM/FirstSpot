@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:testapp/features/learning_guidance/data/guidance_concept_dialogues.dart';
 import 'package:testapp/features/learning_guidance/data/guidance_lessons.dart';
+import 'package:testapp/features/learning_guidance/domain/guidance_models.dart';
 import 'package:testapp/features/learning_guidance/pages/guidance_learning_page.dart';
 
 void main() {
@@ -14,8 +15,24 @@ void main() {
 
     expect(guidanceLessons, hasLength(12));
     expect(guidanceConceptDialogues, hasLength(12));
+    for (final MapEntry<int, GuidanceConceptDialogue> entry
+        in guidanceConceptDialogues.entries) {
+      expect(entry.value.turns, hasLength(7));
+      expect(entry.value.turns.length * 2, lessThanOrEqualTo(50));
+    }
     expect(find.text('新手村课程'), findsOneWidget);
     expect(find.textContaining('什么是二级市场'), findsOneWidget);
+  });
+
+  test('Concept dialogues use seven guided nodes within 50 turns', () {
+    for (final GuidanceConceptDialogue dialogue
+        in guidanceConceptDialogues.values) {
+      expect(dialogue.turns, hasLength(7));
+      expect(dialogue.turns.length * 2, lessThanOrEqualTo(50));
+      for (final GuidanceConceptTurn turn in dialogue.turns) {
+        expect(turn.options, hasLength(3));
+      }
+    }
   });
 
   testWidgets('Chapter one concept card opens Myo chat from saved progress', (
@@ -33,11 +50,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('第 1 章 · 概念对话'), findsOneWidget);
-    expect(find.textContaining('先从最容易误会的地方开始'), findsOneWidget);
+    expect(find.textContaining('Myo 先拆开一个常见误会'), findsOneWidget);
 
-    await tester.tap(find.text('所以它更像二手交易？'));
+    await tester.tap(find.text('所以更像二手转让？'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('最像'), findsOneWidget);
+    expect(find.textContaining('演唱会票'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
@@ -47,8 +64,8 @@ void main() {
     await tester.tap(find.text('继续概念对话'));
     await tester.pumpAndSettle();
 
-    expect(find.text('所以它更像二手交易？'), findsOneWidget);
-    expect(find.textContaining('如果'), findsOneWidget);
+    expect(find.text('所以更像二手转让？'), findsOneWidget);
+    expect(find.textContaining('官方售票'), findsOneWidget);
   });
 
   testWidgets('Guidance lesson detail teaches before passport quiz', (
@@ -192,10 +209,13 @@ Future<void> _completeChapterOneConceptChat(WidgetTester tester) async {
   await tester.pumpAndSettle();
 
   for (final String optionText in <String>[
-    '所以它更像二手交易？',
+    '所以更像二手转让？',
     '第一次卖出时，钱才主要进发行人那里。',
-    '流动性好就是更容易退出。',
-    '我能总结为“投资者之间转让”吗？',
+    '买方付钱，卖方交出股票。',
+    '那我是不是就买不到或卖不掉？',
+    '流动性好不等于收益高。',
+    '价格是在买卖拉扯中形成的。',
+    '我能总结为“投资者之间转让”。',
   ]) {
     await tester.tap(find.text(optionText));
     await tester.pumpAndSettle();

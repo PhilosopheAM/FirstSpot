@@ -88,7 +88,7 @@ UX-Product-Design/
     ├── 12_搭建你的稳健组合.md
     ├── 13_12章练习交互细化与素材清单.md #   12 章 Myo 对话、题库审计与素材提示词
     ├── 14_先教育再小测学习闭环与素材补全记录.md # V1.2 学习闭环与素材缺口维护记录
-    └── 15_12章概念聊天对话与首章实装.md # 12 章概念聊天脚本模式与 CH01 实装记录
+    └── 15_12章概念聊天对话与首章实装.md # 12 章概念路径图方法论、50 轮上限与全章概念聊天脚本记录
 ```
 
 职责：产品设计文档、用户流程、交互草案、版本迭代记录。新版本开 `V2/`、`V3/` 子目录。
@@ -206,3 +206,4 @@ developer_maintenance/
 - 2026-04-25: 从 `T:\Tempo_Files\FirstSpot_Assets` 导入 8 张投资者教育章末练习图片，归档到 `Design_Resource/UI_design_resource/learning_guidance/` 并同步到 `testapp/assets/images/learning_guidance/`。
 - 2026-04-25: 新增 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 与 `guidance_concept_dialogues.dart`，维护 12 章概念聊天脚本，并在 CH01 概念卡实装 Myo 聊天框入口、上方飞入动画、返回续学和术语词卡解释。
 - 2026-04-25: 新增 `testapp/lib/features/onboarding/pages/vault_page.dart`，在首开完成后的用户主页底部提供 `🏛️ 金库` 入口，用于左右滑动查看已获得概念卡。
+- 2026-04-28: 更新 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 为 12 章概念路径图方法论文档，记录 50 轮上限和全章节概念聊天重构。

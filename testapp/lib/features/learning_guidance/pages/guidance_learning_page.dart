@@ -1,5 +1,5 @@
-// Last Updated: 2026-04-25
-// 最后更新: 2026-04-25
+// Last Updated: 2026-04-28
+// 最后更新: 2026-04-28
 //
 // Module: Guidance learning page - 12 chapter investor education path
 // 模块: 投资者教育学习页 - 12 章新手学习路径
@@ -1302,21 +1302,19 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     }
 
     for (final GuidanceLesson lesson in guidanceLessons) {
-      if (lesson.chapterNumber == 1) {
-        final GuidanceConceptDialogue? dialogue =
-            guidanceConceptDialogues[lesson.chapterNumber];
-        if (dialogue != null) {
-          for (int i = 0; i < dialogue.turns.length; i += 1) {
-            final GuidanceConceptTurn turn = dialogue.turns[i];
-            scan(lesson, 'concept_${i}_myo', turn.myoText);
-            for (int j = 0; j < turn.options.length; j += 1) {
-              final GuidanceConceptOption option = turn.options[j];
-              scan(
-                lesson,
-                'concept_${i}_option_${j}_response',
-                option.myoResponse,
-              );
-            }
+      final GuidanceConceptDialogue? dialogue =
+          guidanceConceptDialogues[lesson.chapterNumber];
+      if (dialogue != null) {
+        for (int i = 0; i < dialogue.turns.length; i += 1) {
+          final GuidanceConceptTurn turn = dialogue.turns[i];
+          scan(lesson, 'concept_${i}_myo', turn.myoText);
+          for (int j = 0; j < turn.options.length; j += 1) {
+            final GuidanceConceptOption option = turn.options[j];
+            scan(
+              lesson,
+              'concept_${i}_option_${j}_response',
+              option.myoResponse,
+            );
           }
         }
       }
@@ -1349,8 +1347,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   }
 
   bool _usesConceptChat(GuidanceLesson lesson, int index) {
-    return lesson.chapterNumber == 1 &&
-        index == 0 &&
+    return index == 0 &&
         guidanceConceptDialogues.containsKey(lesson.chapterNumber);
   }
 
