@@ -42,6 +42,7 @@ myo_<expression>.png
 | 睡觉 | `myo_sleeping.png` | 7 天未打开、夜间静默、休眠状态 | 低活跃状态 |
 | 戴墨镜 | `myo_sunglasses.png` | 金卡章节、稀有奖励、里程碑炫耀 | achievement 态 |
 | 戴生日帽 | `myo_birthday_hat.png` | 周年、纪念日、生日活动 | 节庆态 |
+| 趴地抬头微笑 | `myo_lay_face_smile.png` | CH01 IPO 案例讲解开场、底部探出式登场 | 大幅竖屏登场态 |
 
 ## 设计说明
 
@@ -72,6 +73,7 @@ myo_<expression>.png
 - 角色参考图：`创意参考图/小猫app-avatar-v1.png`
 - 生成方式：基于现有小猫形象，用图像生成方式扩展表情变体
 - 保存格式：PNG
+- `myo_lay_face_smile.png` 来源：用户提供素材，原路径 `G:\Tempo\FirstSpot_Tempo\myo_lay_face_smile.png`，用于投资者教育 CH01 “案例 · IPO 股份旅程”底部登场层。
 
 ## 后续建议
 

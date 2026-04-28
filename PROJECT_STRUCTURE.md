@@ -88,7 +88,8 @@ UX-Product-Design/
     ├── 12_搭建你的稳健组合.md
     ├── 13_12章练习交互细化与素材清单.md #   12 章 Myo 对话、题库审计与素材提示词
     ├── 14_先教育再小测学习闭环与素材补全记录.md # V1.2 学习闭环与素材缺口维护记录
-    └── 15_12章概念聊天对话与首章实装.md # 12 章概念路径图方法论、50 轮上限与全章概念聊天脚本记录
+    ├── 15_12章概念聊天对话与首章实装.md # 12 章概念路径图方法论、50 轮上限与全章概念聊天脚本记录
+    └── 16_12章概念对话文本与术语维护稿.md # 12 章概念对话文本稿与专业术语独立维护板块
 ```
 
 职责：产品设计文档、用户流程、交互草案、版本迭代记录。新版本开 `V2/`、`V3/` 子目录。
@@ -113,10 +114,12 @@ Design_Resource/
 
 ### 2.5 `Reading_Material/` — 参考文献
 
-存放论文 / 专著 PDF，供产品与技术决策参考。当前收录：
+存放论文 / 专著 PDF，以及与论文配套的阅读笔记（Markdown），供产品与技术决策参考。当前收录：
 
 - `designing-user-experience-a-guide-to-hci-ux-and-interaction-design.pdf`
 - `Internet of Gamification A Review of Literature on IoT enabled Gamification for User Engagement.pdf`
+- `游戏化实战.pdf`
+- `投资者教育App_游戏化交互设计原则与方法.md`
 
 ### 2.6 `developer_maintenance/` — 代码维护说明
 
@@ -194,6 +197,7 @@ developer_maintenance/
 - 2026-04-20: 新增 `UX-Product-Design/guidance/` 投资者教育学习框架目录，含 1 份总览 + 12 章内容脚本（配套重要概念卡片 CARD-01 ~ CARD-12，按白/蓝/紫/金四级稀有度分布）。
 - 2026-04-21: 新增 `UX-Product-Design/V1/Gamified_Onboarding_Design.md` 游戏化首开引导设计文档（Duolingo-inspired，Gen Z 16-28 目标人群，定义 Myo（喵）IP / FP-XP / Streak / 耐心值 / 双货币 / 成长小组 / 成就墙 / 小金库路径 / Myo 推送人格 共 10 大机制 + 6 步首开流程）。
 - 2026-04-24: 首开启动动效改为 `testapp/assets/animations/myo_wave_frames/` 透明 PNG 序列帧逐帧播放方案；生成脚本位于 `tools/generate_myo_wave_frames.ps1`，详细维护说明见 `developer_maintenance/frontend/feature-onboarding.md` 与 `developer_maintenance/frontend/app-entry.md`。
+- 2026-04-28: 导入并处理了缺失的 `myo_quiz_correct_micro.png`、`myo_quiz_retry_micro.png` 图像及 `quiz_correct_soft_chime_01.wav` 等音频素材，存放在 `Design_Resource/` 并同步至 `testapp/assets/`。在 `MyoPracticeBlock` 和首开引导中实装了答对/答错反馈音效与头像。
 - 2026-04-25: 导入并处理了缺失的音效和图像素材（去底透明化），存放在 `Design_Resource/` 并同步至 `testapp/assets/`。更新了 `onboarding_lesson_step.dart` 以使用真实素材。重构了 `onboarding_lesson_step.dart`，将其全部 3 个关卡的交互统一为类似微信的连续聊天流（Chat Flow）形式，增强了交互反馈感。
 - 2026-04-25: 新增 `UX-Product-Design/guidance/13_12章练习交互细化与素材清单.md`，集中维护 12 章 Myo 对话叙事、章末练习固定交互、48 道题库审计与缺失素材提示词。
 - 2026-04-25: 新增 `testapp/lib/features/learning_guidance/` 投资者教育课程模块，接入 12 章内容、48 道练习与 `assets/images/guidance_cards/` 线条风格素材；新增 `developer_maintenance/frontend/feature-learning-guidance.md`。
@@ -207,3 +211,9 @@ developer_maintenance/
 - 2026-04-25: 新增 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 与 `guidance_concept_dialogues.dart`，维护 12 章概念聊天脚本，并在 CH01 概念卡实装 Myo 聊天框入口、上方飞入动画、返回续学和术语词卡解释。
 - 2026-04-25: 新增 `testapp/lib/features/onboarding/pages/vault_page.dart`，在首开完成后的用户主页底部提供 `🏛️ 金库` 入口，用于左右滑动查看已获得概念卡。
 - 2026-04-28: 更新 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 为 12 章概念路径图方法论文档，记录 50 轮上限和全章节概念聊天重构。
+- 2026-04-28: 新增 `UX-Product-Design/guidance/16_12章概念对话文本与术语维护稿.md`，从代码中抽取 12 章概念对话脚本与专业术语词表，作为后续文本生成代码流程的维护稿。
+- 2026-04-28: 更新 `testapp/lib/features/learning_guidance/` 第一章案例互动，将 CH01 “案例”改为 Myo 引导的滚动式 IPO 股份旅程讲解，并补充 IPO、承销商、打新、破发等术语解释与测试覆盖。
+- 2026-04-28: 从 `G:\Tempo\FirstSpot_Tempo\myo_lay_face_smile.png` 移入 Myo 角色设计资源并同步至 Flutter 资产目录，作为 CH01 IPO 案例讲解页底部登场图。
+- 2026-04-28: 新增 `Reading_Material/投资者教育App_游戏化交互设计原则与方法.md`，沉淀投资者教育 App 游戏化交互设计的体系化原则与方法笔记。
+
+- 2026-04-28: 将 CH01 IPO 案例讲解从“点击向下箭头”改为“拖拽下一位参与方进入上一幕”的推进方式；每幕弹出后 Myo 会再次从底部滑入并顶出可长按拖拽的参与方卡片，拖拽时上一幕卡片边框脉冲高亮，放入成功后自动弹出下一幕并在完成后点亮案例步骤；同步更新 widget 测试为长按拖拽流程。

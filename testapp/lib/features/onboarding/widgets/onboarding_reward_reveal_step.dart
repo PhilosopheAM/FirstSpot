@@ -10,6 +10,7 @@
 /// Email: 11911421@mail.sustech.edu.cn
 
 import 'dart:math' as math;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingRewardRevealStep extends StatefulWidget {
@@ -34,6 +35,7 @@ class _OnboardingRewardRevealStepState extends State<OnboardingRewardRevealStep>
   late final AnimationController _cardRiseController;
   late final AnimationController _cardFloatController;
   late final Animation<Offset> _cardRiseAnimation;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -59,6 +61,7 @@ class _OnboardingRewardRevealStepState extends State<OnboardingRewardRevealStep>
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _cardRiseController.dispose();
     _cardFloatController.dispose();
     super.dispose();
@@ -70,7 +73,8 @@ class _OnboardingRewardRevealStepState extends State<OnboardingRewardRevealStep>
         _isCardFlipped = true;
         _canCollectCard = false;
       });
-      // TODO: 播放 assets/audio/card_flip.wav
+      // 播放 assets/audio/card_flip.wav
+      _audioPlayer.play(AssetSource('audio/card_flip.wav'));
       Future.delayed(const Duration(milliseconds: 650), () {
         if (mounted && _isCardFlipped && !_isCardCollected) {
           setState(() {

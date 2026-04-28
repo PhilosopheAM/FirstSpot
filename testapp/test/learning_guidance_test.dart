@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -181,6 +182,52 @@ void main() {
     expect(find.textContaining('你在二级市场买入'), findsOneWidget);
   });
 
+  testWidgets('Chapter one case opens scrolling Myo IPO explanation', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const MaterialApp(home: GuidanceLearningPage()));
+    await tester.pump();
+
+    await tester.tap(find.textContaining('什么是二级市场'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('进入案例讲解'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+
+    await tester.tap(find.text('进入案例讲解'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('案例 · IPO 股份旅程'), findsOneWidget);
+    expect(find.textContaining('Myo：跟我从公司出发'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey<String>('ipo_case_drag_card_1')),
+      findsOneWidget,
+    );
+
+    for (int i = 1; i < 6; i += 1) {
+      await _dragCaseParticipant(
+        tester,
+        dragCardIndex: i,
+        dropTargetIndex: i - 1,
+      );
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.textContaining('案例点亮', findRichText: true), findsOneWidget);
+    await tester.tap(find.text('返回章节'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('复习案例讲解'), findsOneWidget);
+  });
+
   testWidgets('Finance glossary opens a closable explanation dialog in chat', (
     WidgetTester tester,
   ) async {
@@ -254,4 +301,29 @@ Future<void> _completeChapterOneConceptChat(
     await tester.tap(find.text('返回章节'));
     await tester.pumpAndSettle();
   }
+}
+
+Future<void> _dragCaseParticipant(
+  WidgetTester tester, {
+  required int dragCardIndex,
+  required int dropTargetIndex,
+}) async {
+  final Finder dragCard = find.byKey(
+    ValueKey<String>('ipo_case_drag_card_$dragCardIndex'),
+  );
+  final Finder dropTarget = find.byKey(
+    ValueKey<String>('ipo_case_drop_target_$dropTargetIndex'),
+  );
+
+  await tester.ensureVisible(dropTarget);
+  await tester.pump();
+
+  final Offset dragStart = tester.getCenter(dragCard);
+  final Offset dropCenter = tester.getCenter(dropTarget);
+  final TestGesture gesture = await tester.startGesture(dragStart);
+  await tester.pump(kLongPressTimeout + const Duration(milliseconds: 120));
+  await gesture.moveTo(dropCenter);
+  await tester.pump(const Duration(milliseconds: 180));
+  await gesture.up();
+  await tester.pump(const Duration(milliseconds: 260));
 }

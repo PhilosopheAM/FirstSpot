@@ -1,4 +1,4 @@
-﻿/// Last Updated: 2026-04-25
+/// Last Updated: 2026-04-25
 /// 最后更新: 2026-04-25
 ///
 /// Module: Onboarding Mini Lesson Step (Step 03)
@@ -9,6 +9,12 @@
 /// Author: Harry Chen / AI
 /// Email: 11911421@mail.sustech.edu.cn
 
+library;
+
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -18,10 +24,7 @@ import 'bouncy_button.dart';
 import 'xp_flyup.dart';
 
 class OnboardingMiniLessonStep extends StatefulWidget {
-  const OnboardingMiniLessonStep({
-    super.key,
-    required this.onNext,
-  });
+  const OnboardingMiniLessonStep({super.key, required this.onNext});
 
   final VoidCallback onNext;
 
@@ -33,12 +36,16 @@ class OnboardingMiniLessonStep extends StatefulWidget {
 class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
     with TickerProviderStateMixin {
   static const Duration _myoTypingDelay = Duration(milliseconds: 600);
+  static const Duration _celebrationDuration = Duration(milliseconds: 2800);
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+  late final AnimationController _celebrationController;
+  late final List<_ConfettiPiece> _confettiPieces;
 
   int _currentLevel = 0;
   int _lives = 5;
   int _xp = 0;
+  bool _isCelebratingCompletion = false;
 
   final List<Widget> _chatMessages = <Widget>[];
   final ScrollController _scrollController = ScrollController();
@@ -73,14 +80,45 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
   @override
   void initState() {
     super.initState();
+    _celebrationController = AnimationController(
+      vsync: this,
+      duration: _celebrationDuration,
+    );
+    _confettiPieces = _createConfettiPieces();
     _initLevel1Chat();
   }
 
   @override
   void dispose() {
+    _celebrationController.dispose();
     _audioPlayer.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  List<_ConfettiPiece> _createConfettiPieces() {
+    final math.Random random = math.Random(20260428);
+    const List<Color> colors = <Color>[
+      Color(0xFFFFB547),
+      Color(0xFFFF6B8B),
+      Color(0xFF4CC38A),
+      Color(0xFF55B7FF),
+      Color(0xFFFFE082),
+      Color(0xFF9BDB7A),
+    ];
+
+    return List<_ConfettiPiece>.generate(110, (int index) {
+      return _ConfettiPiece(
+        startX: random.nextDouble(),
+        peakXDrift: (random.nextDouble() - 0.5) * 220,
+        peakHeightFactor: 0.10 + random.nextDouble() * 0.42,
+        delay: random.nextDouble() * 0.2,
+        size: 9 + random.nextDouble() * 13,
+        rotation: random.nextDouble() * math.pi * 2,
+        spin: (random.nextDouble() - 0.5) * math.pi * 5,
+        color: colors[index % colors.length],
+      );
+    });
   }
 
   void _scrollToBottom() {
@@ -116,12 +154,29 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
         null,
         child: const Text.rich(
           TextSpan(
-            style: TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: Color(0xFF23302A)),
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF23302A),
+            ),
             children: <TextSpan>[
               TextSpan(text: '「'),
-              TextSpan(text: '本金', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1FA95B))),
+              TextSpan(
+                text: '本金',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1FA95B),
+                ),
+              ),
               TextSpan(text: '」就是你暂时不急着花掉、愿意拿来试一试的那笔钱——我管它叫「'),
-              TextSpan(text: '闲置资金', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1FA95B))),
+              TextSpan(
+                text: '闲置资金',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1FA95B),
+                ),
+              ),
               TextSpan(text: '」。\n春天不会凭空长出庄稼：得先把种子放进土里。本金，就是那颗「春天的种子」。'),
             ],
           ),
@@ -133,16 +188,22 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
 
   void _initLevel2Chat() {
     _chatMessages.addAll(<Widget>[
-      _myoBubble('上一关我们把「闲置资金」种进了田。「涨跌」不是猜明天天气——是在看：这颗种子在「这块田里」，这段时间长得健不健康、长势往上还是往下。'),
+      _myoBubble(
+        '上一关我们把「闲置资金」种进了田。「涨跌」不是猜明天天气——是在看：这颗种子在「这块田里」，这段时间长得健不健康、长势往上还是往下。',
+      ),
       _myoBubble('这块「田地」，在现实里就是你选择的市场和标的物（比如某只指数基金、某条指数）——不同田，土质不一样，长势也不一样。'),
-      _myoBubble('纵轴可以理解为「长势评分」。折线整体向上 = 这段时间里，在田里长得更好。\n看下面这条线：从第 0 天到第 30 天，整体更像哪一种？'),
+      _myoBubble(
+        '纵轴可以理解为「长势评分」。折线整体向上 = 这段时间里，在田里长得更好。\n看下面这条线：从第 0 天到第 30 天，整体更像哪一种？',
+      ),
     ]);
   }
 
   void _initLevel3Chat() {
     _chatMessages.addAll(<Widget>[
       _myoBubble('到「秋天」才有收成。「盈亏」就是：秋天粮仓里，多收还是少收。'),
-      _myoBubble('收成好不好，不只看春天种了几颗——还有雨水、虫害、你有没有除草……对应投资里，就是时间、市场、标的、运气和纪律，一堆因素加在一起的结果。'),
+      _myoBubble(
+        '收成好不好，不只看春天种了几颗——还有雨水、虫害、你有没有除草……对应投资里，就是时间、市场、标的、运气和纪律，一堆因素加在一起的结果。',
+      ),
       _myoBubble('春天你准备了 100 颗种子，秋天一数，收了 90 颗。把你的心情拖进「收成筐」——没有标准答案，我只想听见你怎么想。'),
     ]);
   }
@@ -212,11 +273,51 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
     }
   }
 
-  void _completeLessons() {
+  Future<void> _completeLessons() async {
+    if (_isCelebratingCompletion) {
+      return;
+    }
+
+    _celebrationController.reset();
+    setState(() => _isCelebratingCompletion = true);
+    HapticFeedback.vibrate();
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.play(
+        AssetSource('audio/myo_meow_short.mp3'),
+        volume: 0.95,
+      );
+    } catch (_) {
+      // Celebration visuals should still run if audio is unavailable.
+    }
+  }
+
+  void _finishCompletionCelebration() {
+    if (!_isCelebratingCompletion) {
+      return;
+    }
+
+    setState(() => _isCelebratingCompletion = false);
+    _completeRewardAndContinue();
+  }
+
+  void _completeRewardAndContinue() {
     setState(() => _xp += 10);
     showXpFlyup(context, 10);
     HapticFeedback.vibrate();
-    _audioPlayer.play(AssetSource('audio/basket_drop.wav')); // or another fanfare sound
+    _audioPlayer.play(
+      AssetSource('audio/basket_drop.wav'),
+    ); // or another fanfare sound
+    widget.onNext();
+  }
+
+  void showCompletionDialogLegacy() {
+    setState(() => _xp += 10);
+    showXpFlyup(context, 10);
+    HapticFeedback.vibrate();
+    _audioPlayer.play(
+      AssetSource('audio/basket_drop.wav'),
+    ); // or another fanfare sound
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -261,24 +362,44 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
     _simulateMyoTyping(() async {
       setState(() {
         if (count == 1) {
-          _chatMessages.add(_myoBubble('种下一颗种子啦！这是一个很好的开始。如果你觉得够了，可以点击「就这么多」，或者继续播种。', accent: true));
+          _chatMessages.add(
+            _myoBubble(
+              '种下一颗种子啦！这是一个很好的开始。如果你觉得够了，可以点击「就这么多」，或者继续播种。',
+              accent: true,
+            ),
+          );
         } else if (count == 2) {
-          _chatMessages.add(_myoBubble('两颗种子下地！未来的收成又多了一分期待。还要继续吗？', accent: true));
+          _chatMessages.add(
+            _myoBubble('两颗种子下地！未来的收成又多了一分期待。还要继续吗？', accent: true),
+          );
         } else {
-          _chatMessages.add(_myoBubble(
-            null,
-            accent: true,
-            child: const Text.rich(
-              TextSpan(
-                style: TextStyle(fontSize: 15, height: 1.45, fontWeight: FontWeight.w600, color: Color(0xFFB45309)),
-                children: <TextSpan>[
-                  TextSpan(text: '三颗全种下啦！你很大方哦，但记住：投资只用'),
-                  TextSpan(text: '闲置资金', style: TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1FA95B))),
-                  TextSpan(text: '。准备好我们就进入下一步吧！'),
-                ],
+          _chatMessages.add(
+            _myoBubble(
+              null,
+              accent: true,
+              child: const Text.rich(
+                TextSpan(
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFB45309),
+                  ),
+                  children: <TextSpan>[
+                    TextSpan(text: '三颗全种下啦！你很大方哦，但记住：投资只用'),
+                    TextSpan(
+                      text: '闲置资金',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1FA95B),
+                      ),
+                    ),
+                    TextSpan(text: '。准备好我们就进入下一步吧！'),
+                  ],
+                ),
               ),
             ),
-          ));
+          );
         }
       });
     });
@@ -293,7 +414,9 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
       });
       _simulateMyoTyping(() async {
         setState(() {
-          _chatMessages.add(_myoBubble('春天不播种，秋天可就没有收成哦！至少投入一枚闲置资金吧。', accent: true));
+          _chatMessages.add(
+            _myoBubble('春天不播种，秋天可就没有收成哦！至少投入一枚闲置资金吧。', accent: true),
+          );
         });
         _shakeField();
       });
@@ -303,7 +426,9 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
       });
       _simulateMyoTyping(() async {
         setState(() {
-          _chatMessages.add(_myoBubble('好耶，有种子就有故事开头了——这是稳稳的第一步～', accent: true));
+          _chatMessages.add(
+            _myoBubble('好耶，有种子就有故事开头了——这是稳稳的第一步～', accent: true),
+          );
           _chatMessages.add(_buildNextLevelButton('进入夏天'));
         });
         _handleCorrectAnswer(delayNext: false);
@@ -326,14 +451,18 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
     await _simulateMyoTyping(() async {
       if (isCorrect) {
         setState(() {
-          _chatMessages.add(_myoBubble('对啦！这条线整体往上——种子在这块田里，这段时间长得更好了。', accent: true));
+          _chatMessages.add(
+            _myoBubble('对啦！这条线整体往上——种子在这块田里，这段时间长得更好了。', accent: true),
+          );
           _chatMessages.add(_buildNextLevelButton('进入秋天'));
         });
         _handleCorrectAnswer(delayNext: false);
       } else {
         _handleWrongAnswer();
         setState(() {
-          _chatMessages.add(_myoBubble('没关系，很多人第一遍也会看错——涨跌看的是「长势」，不是猜运气。(耐心 -1)', accent: true));
+          _chatMessages.add(
+            _myoBubble('没关系，很多人第一遍也会看错——涨跌看的是「长势」，不是猜运气。(耐心 -1)', accent: true),
+          );
         });
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (mounted) {
@@ -359,7 +488,12 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
 
     await _simulateMyoTyping(() async {
       setState(() {
-        _chatMessages.add(_myoBubble('收到你的心情啦～少收几颗不代表春天白过；重要的是：你知道这是「一整季的结果」，不是某一天决定的。', accent: true));
+        _chatMessages.add(
+          _myoBubble(
+            '收到你的心情啦～少收几颗不代表春天白过；重要的是：你知道这是「一整季的结果」，不是某一天决定的。',
+            accent: true,
+          ),
+        );
         _chatMessages.add(_buildNextLevelButton('完成体验'));
       });
       _handleCorrectAnswer(delayNext: false);
@@ -418,7 +552,14 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
             ),
             child: Row(
               children: <Widget>[
-                const Text('XP', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFFFFB547))),
+                const Text(
+                  'XP',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFFFB547),
+                  ),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '$_xp',
@@ -450,11 +591,20 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
               color: accent ? const Color(0xFFFFF9F0) : const Color(0xFFE8F5E9),
               shape: BoxShape.circle,
               border: Border.all(
-                color: accent ? const Color(0xFFFFB547) : const Color(0xFFD7E8DD),
+                color: accent
+                    ? const Color(0xFFFFB547)
+                    : const Color(0xFFD7E8DD),
                 width: 2,
               ),
             ),
-            child: const Text('喵', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF4CC38A))),
+            child: const Text(
+              '喵',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: Color(0xFF4CC38A),
+              ),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -469,19 +619,25 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                   bottomLeft: Radius.circular(4),
                 ),
                 border: Border.all(
-                  color: accent ? const Color(0xFFFFB547) : const Color(0xFFE6E8EC),
+                  color: accent
+                      ? const Color(0xFFFFB547)
+                      : const Color(0xFFE6E8EC),
                   width: 2,
                 ),
               ),
-              child: child ?? Text(
-                text ?? '',
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.45,
-                  fontWeight: FontWeight.w600,
-                  color: accent ? const Color(0xFFB45309) : const Color(0xFF23302A),
-                ),
-              ),
+              child:
+                  child ??
+                  Text(
+                    text ?? '',
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.45,
+                      fontWeight: FontWeight.w600,
+                      color: accent
+                          ? const Color(0xFFB45309)
+                          : const Color(0xFF23302A),
+                    ),
+                  ),
             ),
           ),
         ],
@@ -531,10 +687,17 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: <BoxShadow>[
-          BoxShadow(color: Color(0x33000000), blurRadius: 8, offset: Offset(0, 4)),
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
-      child: Image.asset('assets/images/idle_money_coin.png', fit: BoxFit.contain),
+      child: Image.asset(
+        'assets/images/idle_money_coin.png',
+        fit: BoxFit.contain,
+      ),
     );
   }
 
@@ -545,7 +708,14 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          const Text('闲置资金（拖我进田）', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF8A948E))),
+          const Text(
+            '闲置资金（拖我进田）',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF8A948E),
+            ),
+          ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -560,10 +730,21 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                       builder: (BuildContext context, double s, Widget? child) {
                         return Transform.scale(scale: s, child: child);
                       },
-                      child: Image.asset('assets/images/planted_sprout.png', width: 48, height: 48),
+                      child: Image.asset(
+                        'assets/images/planted_sprout.png',
+                        width: 48,
+                        height: 48,
+                      ),
                     ),
                     const SizedBox(height: 4),
-                    const Text('已播种', style: TextStyle(fontSize: 11, color: Color(0xFF4CC38A), fontWeight: FontWeight.w700)),
+                    const Text(
+                      '已播种',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF4CC38A),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 );
               }
@@ -571,15 +752,9 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                 data: index,
                 feedback: Material(
                   color: Colors.transparent,
-                  child: Transform.scale(
-                    scale: 1.12,
-                    child: _idleCoin(),
-                  ),
+                  child: Transform.scale(scale: 1.12, child: _idleCoin()),
                 ),
-                childWhenDragging: Opacity(
-                  opacity: 0.35,
-                  child: _idleCoin(),
-                ),
+                childWhenDragging: Opacity(opacity: 0.35, child: _idleCoin()),
                 onDragStarted: () => HapticFeedback.selectionClick(),
                 onDragEnd: (DraggableDetails details) {
                   if (!details.wasAccepted) {
@@ -605,53 +780,83 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
               onAcceptWithDetails: (DragTargetDetails<int> details) {
                 _onCoinDropped(details.data);
               },
-              builder: (BuildContext context, List<int?> candidateData, List<dynamic> rejectedData) {
-                final bool over = candidateData.isNotEmpty || _fieldDragOver;
-                return GestureDetector(
-                  onTap: () async {
-                    if (_plantedCount == 0) {
-                      HapticFeedback.vibrate();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Myo：先拖一枚「闲置资金」进田里嘛～')),
-                      );
-                      await _shakeField();
-                    }
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: over ? const Color(0xFFE8F5E9) : const Color(0xFFF7FAF8),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: over ? const Color(0xFF4CC38A) : const Color(0xFFCED4D0),
-                        width: over ? 3 : 2,
-                      ),
-                      boxShadow: <BoxShadow>[
-                        if (over)
-                          BoxShadow(
-                            color: const Color(0xFF4CC38A).withValues(alpha: 0.18),
-                            blurRadius: 18,
-                            spreadRadius: 0,
-                            offset: const Offset(0, 6),
-                          ),
-                      ],
-                    ),
-                    child: Column(
-                      children: <Widget>[
-                        const Text('春天 · 田地', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF4CC38A))),
-                        const SizedBox(height: 8),
-                        Text(
-                          _plantedCount == 0 ? '把硬币拖到这里播种' : '已播种 $_plantedCount / 3',
-                          style: const TextStyle(fontSize: 14, color: Color(0xFF5D696F), fontWeight: FontWeight.w600),
+              builder:
+                  (
+                    BuildContext context,
+                    List<int?> candidateData,
+                    List<dynamic> rejectedData,
+                  ) {
+                    final bool over =
+                        candidateData.isNotEmpty || _fieldDragOver;
+                    return GestureDetector(
+                      onTap: () async {
+                        if (_plantedCount == 0) {
+                          HapticFeedback.vibrate();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Myo：先拖一枚「闲置资金」进田里嘛～'),
+                            ),
+                          );
+                          await _shakeField();
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeOut,
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 24,
+                          horizontal: 16,
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                        decoration: BoxDecoration(
+                          color: over
+                              ? const Color(0xFFE8F5E9)
+                              : const Color(0xFFF7FAF8),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: over
+                                ? const Color(0xFF4CC38A)
+                                : const Color(0xFFCED4D0),
+                            width: over ? 3 : 2,
+                          ),
+                          boxShadow: <BoxShadow>[
+                            if (over)
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF4CC38A,
+                                ).withValues(alpha: 0.18),
+                                blurRadius: 18,
+                                spreadRadius: 0,
+                                offset: const Offset(0, 6),
+                              ),
+                          ],
+                        ),
+                        child: Column(
+                          children: <Widget>[
+                            const Text(
+                              '春天 · 田地',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF4CC38A),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _plantedCount == 0
+                                  ? '把硬币拖到这里播种'
+                                  : '已播种 $_plantedCount / 3',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF5D696F),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
             ),
           ),
           const SizedBox(height: 16),
@@ -661,7 +866,14 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
             borderRadius: 16,
             color: const Color(0xFF162025),
             onPressed: _onLevel1Done,
-            child: const Text('就这么多', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            child: const Text(
+              '就这么多',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -676,7 +888,11 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE6E8EC), width: 2),
         boxShadow: const <BoxShadow>[
-          BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 4)),
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: LineChart(
@@ -693,8 +909,12 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
           ),
           titlesData: FlTitlesData(
             show: true,
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -704,13 +924,27 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                   if (value == 0) {
                     return const Padding(
                       padding: EdgeInsets.only(top: 6),
-                      child: Text('第0天', style: TextStyle(color: Color(0xFF8A948E), fontSize: 10, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        '第0天',
+                        style: TextStyle(
+                          color: Color(0xFF8A948E),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     );
                   }
                   if (value == 30) {
                     return const Padding(
                       padding: EdgeInsets.only(top: 6),
-                      child: Text('第30天', style: TextStyle(color: Color(0xFF8A948E), fontSize: 10, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        '第30天',
+                        style: TextStyle(
+                          color: Color(0xFF8A948E),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     );
                   }
                   return const SizedBox.shrink();
@@ -725,7 +959,11 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                 getTitlesWidget: (double value, TitleMeta meta) {
                   return Text(
                     value.toInt().toString(),
-                    style: const TextStyle(color: Color(0xFF8A948E), fontSize: 11, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Color(0xFF8A948E),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   );
                 },
               ),
@@ -746,17 +984,21 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
               isStrokeCapRound: true,
               dotData: FlDotData(
                 show: true,
-                getDotPainter: (FlSpot spot, double x, LineChartBarData bar, int index) {
-                  if (index == 0 || index == _trendData.length - 1) {
-                    return FlDotCirclePainter(
-                      radius: 5,
-                      color: Colors.white,
-                      strokeWidth: 2.5,
-                      strokeColor: const Color(0xFFFF5C39),
-                    );
-                  }
-                  return FlDotCirclePainter(radius: 0, color: Colors.transparent);
-                },
+                getDotPainter:
+                    (FlSpot spot, double x, LineChartBarData bar, int index) {
+                      if (index == 0 || index == _trendData.length - 1) {
+                        return FlDotCirclePainter(
+                          radius: 5,
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                          strokeColor: const Color(0xFFFF5C39),
+                        );
+                      }
+                      return FlDotCirclePainter(
+                        radius: 0,
+                        color: Colors.transparent,
+                      );
+                    },
               ),
               belowBarData: BarAreaData(
                 show: true,
@@ -795,7 +1037,9 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
           height: 64,
           borderRadius: 16,
           color: selected ? const Color(0xFFE8F5E9) : const Color(0xFFF7FAF8),
-          shadowColor: selected ? const Color(0xFF4CC38A) : const Color(0xFFE6E8EC),
+          shadowColor: selected
+              ? const Color(0xFF4CC38A)
+              : const Color(0xFFE6E8EC),
           onPressed: () => _onTrendSelected(index, label, isCorrect),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -808,7 +1052,9 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                 fontSize: 13,
                 height: 1.2,
                 fontWeight: FontWeight.w800,
-                color: selected ? const Color(0xFF1FA95B) : const Color(0xFF1F2328),
+                color: selected
+                    ? const Color(0xFF1FA95B)
+                    : const Color(0xFF1F2328),
               ),
             ),
           ),
@@ -824,10 +1070,7 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          SizedBox(
-            height: 160,
-            child: _trendChartCard(),
-          ),
+          SizedBox(height: 160, child: _trendChartCard()),
           const SizedBox(height: 16),
           Row(
             children: <Widget>[
@@ -843,7 +1086,13 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
     );
   }
 
-  static const List<String> _level3Emojis = <String>['😊', '😭', '😤', '😌', '🤔'];
+  static const List<String> _level3Emojis = <String>[
+    '😊',
+    '😭',
+    '😤',
+    '😌',
+    '🤔',
+  ];
 
   Widget _emojiChip(String emoji, {bool large = false}) {
     return Container(
@@ -854,7 +1103,13 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
         color: Colors.white,
         shape: BoxShape.circle,
         border: Border.all(color: const Color(0xFFE6E8EC), width: 2),
-        boxShadow: const <BoxShadow>[BoxShadow(color: Color(0x0D000000), blurRadius: 6, offset: Offset(0, 3))],
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Text(emoji, style: TextStyle(fontSize: large ? 36 : 30)),
     );
@@ -886,7 +1141,10 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
                       child: _emojiChip(e, large: true),
                     ),
                   ),
-                  childWhenDragging: Opacity(opacity: 0.3, child: _emojiChip(e)),
+                  childWhenDragging: Opacity(
+                    opacity: 0.3,
+                    child: _emojiChip(e),
+                  ),
                   onDragStarted: () => HapticFeedback.selectionClick(),
                   child: _emojiChip(e),
                 );
@@ -907,46 +1165,68 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
               onAcceptWithDetails: (DragTargetDetails<String> details) {
                 _onEmojiDropped(details.data);
               },
-              builder: (BuildContext context, List<String?> cd, List<dynamic> r) {
-                final bool over = cd.isNotEmpty || _basketDragOver;
-                return AnimatedScale(
-                  scale: over ? 1.04 : 1.0,
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutBack,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    height: 120,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: over ? const Color(0xFFFFF9F0) : const Color(0xFFF7FAF8),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: over ? const Color(0xFFFFB547) : const Color(0xFFE6E8EC),
-                        width: over ? 3 : 2,
-                      ),
-                      boxShadow: <BoxShadow>[
-                        if (over)
-                          BoxShadow(
-                            color: const Color(0xFFFFB547).withValues(alpha: 0.25),
-                            blurRadius: 14,
-                            offset: const Offset(0, 6),
+              builder:
+                  (BuildContext context, List<String?> cd, List<dynamic> r) {
+                    final bool over = cd.isNotEmpty || _basketDragOver;
+                    return AnimatedScale(
+                      scale: over ? 1.04 : 1.0,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutBack,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        height: 120,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: over
+                              ? const Color(0xFFFFF9F0)
+                              : const Color(0xFFF7FAF8),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: over
+                                ? const Color(0xFFFFB547)
+                                : const Color(0xFFE6E8EC),
+                            width: over ? 3 : 2,
                           ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        if (_pickedEmoji != null)
-                          Text(_pickedEmoji!, style: const TextStyle(fontSize: 36))
-                        else
-                          Image.asset('assets/images/harvest_basket.png', width: 48, height: 48),
-                        const SizedBox(height: 8),
-                        const Text('秋天 · 收成筐', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFFB45309))),
-                      ],
-                    ),
-                  ),
-                );
-              },
+                          boxShadow: <BoxShadow>[
+                            if (over)
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFFFB547,
+                                ).withValues(alpha: 0.25),
+                                blurRadius: 14,
+                                offset: const Offset(0, 6),
+                              ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            if (_pickedEmoji != null)
+                              Text(
+                                _pickedEmoji!,
+                                style: const TextStyle(fontSize: 36),
+                              )
+                            else
+                              Image.asset(
+                                'assets/images/harvest_basket.png',
+                                width: 48,
+                                height: 48,
+                              ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              '秋天 · 收成筐',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFFB45309),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
             ),
           ),
         ],
@@ -958,44 +1238,444 @@ class _OnboardingMiniLessonStepState extends State<OnboardingMiniLessonStep>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7FAF8),
-      body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            _buildTopBar(),
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                itemCount: _chatMessages.length + (_isMyoTyping ? 1 : 0),
-                itemBuilder: (BuildContext context, int index) {
-                  if (index == _chatMessages.length) {
-                    return _myoBubble('...', accent: true);
-                  }
-                  return _chatMessages[index];
-                },
-              ),
-            ),
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                border: Border(top: BorderSide(color: Color(0xFFE6E8EC), width: 1)),
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 420),
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                child: _currentLevel == 0
-                    ? _buildLevel1Bottom()
-                    : _currentLevel == 1
+      body: Stack(
+        children: <Widget>[
+          SafeArea(
+            child: Column(
+              children: <Widget>[
+                _buildTopBar(),
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
+                    itemCount: _chatMessages.length + (_isMyoTyping ? 1 : 0),
+                    itemBuilder: (BuildContext context, int index) {
+                      if (index == _chatMessages.length) {
+                        return _myoBubble('...', accent: true);
+                      }
+                      return _chatMessages[index];
+                    },
+                  ),
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      top: BorderSide(color: Color(0xFFE6E8EC), width: 1),
+                    ),
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 420),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    child: _currentLevel == 0
+                        ? _buildLevel1Bottom()
+                        : _currentLevel == 1
                         ? _buildLevel2Bottom()
                         : _buildLevel3Bottom(),
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
+          if (_isCelebratingCompletion)
+            _CompletionCelebrationOverlay(
+              confettiController: _celebrationController,
+              confettiPieces: _confettiPieces,
+              onFinished: _finishCompletionCelebration,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompletionCelebrationOverlay extends StatefulWidget {
+  const _CompletionCelebrationOverlay({
+    required this.confettiController,
+    required this.confettiPieces,
+    required this.onFinished,
+  });
+
+  final AnimationController confettiController;
+  final List<_ConfettiPiece> confettiPieces;
+  final VoidCallback onFinished;
+
+  @override
+  State<_CompletionCelebrationOverlay> createState() =>
+      _CompletionCelebrationOverlayState();
+}
+
+class _CompletionCelebrationOverlayState
+    extends State<_CompletionCelebrationOverlay>
+    with TickerProviderStateMixin {
+  static const Duration _repeatInterval = Duration(seconds: 4);
+
+  late final AnimationController _myoController;
+  late final AnimationController _outroController;
+  Timer? _repeatTimer;
+  bool _isConfettiActive = false;
+  bool _exitRequested = false;
+  bool _didFinish = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _myoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 720),
+      reverseDuration: const Duration(milliseconds: 460),
+    )..forward();
+    _outroController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 4400),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startConfetti();
+    });
+  }
+
+  @override
+  void dispose() {
+    _repeatTimer?.cancel();
+    widget.confettiController.stop();
+    _myoController.dispose();
+    _outroController.dispose();
+    super.dispose();
+  }
+
+  void _startConfetti() {
+    if (!mounted || _exitRequested || _isConfettiActive) {
+      return;
+    }
+
+    unawaited(_playConfettiOnce());
+  }
+
+  Future<void> _playConfettiOnce() async {
+    if (!mounted || _exitRequested || _isConfettiActive) {
+      return;
+    }
+
+    setState(() => _isConfettiActive = true);
+    try {
+      await widget.confettiController.forward(from: 0);
+    } on TickerCanceled {
+      if (mounted) {
+        setState(() => _isConfettiActive = false);
+      }
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _isConfettiActive = false);
+    if (_exitRequested) {
+      await _finishAfterMyoExit();
+      return;
+    }
+
+    _repeatTimer?.cancel();
+    _repeatTimer = Timer(_repeatInterval, _startConfetti);
+  }
+
+  void _handleTap() {
+    if (_exitRequested || _didFinish) {
+      return;
+    }
+
+    setState(() => _exitRequested = true);
+    _repeatTimer?.cancel();
+    if (!_isConfettiActive || !widget.confettiController.isAnimating) {
+      unawaited(_finishAfterMyoExit());
+    }
+  }
+
+  Future<void> _finishAfterMyoExit() async {
+    if (_didFinish) {
+      return;
+    }
+
+    _didFinish = true;
+    await _outroController.forward(from: 0);
+    if (mounted) {
+      widget.onFinished();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (_) => _handleTap(),
+        child: AnimatedBuilder(
+          animation: Listenable.merge(<Listenable>[
+            widget.confettiController,
+            _myoController,
+            _outroController,
+          ]),
+          builder: (BuildContext context, Widget? child) {
+            final double t = widget.confettiController.value;
+            final double myoProgress = _myoController.value.clamp(0.0, 1.0);
+            final double myoEntrance = Curves.easeOutBack
+                .transform(myoProgress)
+                .clamp(0.0, 1.0);
+            final double myoScale = Curves.easeOutBack.transform(myoProgress);
+            final double outro = _outroController.value;
+            final double settleDown = Curves.easeOutCubic.transform(
+              (outro / 0.12).clamp(0.0, 1.0),
+            );
+            final double titleIn = Curves.easeOutCubic.transform(
+              ((outro - 0.10) / 0.08).clamp(0.0, 1.0),
+            );
+            final double titleOut = Curves.easeInCubic.transform(
+              ((outro - 0.48) / 0.12).clamp(0.0, 1.0),
+            );
+            final double bodyIn = Curves.easeOutCubic.transform(
+              ((outro - 0.60) / 0.10).clamp(0.0, 1.0),
+            );
+            final double finalSlide = Curves.easeInCubic.transform(
+              ((outro - 0.88) / 0.12).clamp(0.0, 1.0),
+            );
+            final Size screenSize = MediaQuery.sizeOf(context);
+
+            return Transform.translate(
+              offset: Offset(0, screenSize.height * finalSlide),
+              child: Stack(
+                children: <Widget>[
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 7, sigmaY: 7),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.82),
+                      ),
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment.bottomCenter,
+                          radius: 1.18,
+                          colors: <Color>[
+                            const Color(0xFFFFF0B8).withValues(alpha: 0.58),
+                            const Color(0xFFFFFBF0).withValues(alpha: 0.36),
+                            Colors.white.withValues(alpha: 0.24),
+                          ],
+                          stops: const <double>[0, 0.48, 1],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Transform.translate(
+                      offset: Offset(
+                        0,
+                        screenSize.height * 0.7 * (1 - myoEntrance) +
+                            screenSize.height * 0.12 * settleDown,
+                      ),
+                      child: Transform.scale(
+                        scale: 0.82 + myoScale * 0.18,
+                        child: Image.asset(
+                          'assets/images/characters/myo/myo_celebrate_greatly.png',
+                          height: screenSize.height * 0.68,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ),
+                  CustomPaint(
+                    size: Size.infinite,
+                    painter: _ConfettiPainter(
+                      progress: _isConfettiActive ? t : 0,
+                      pieces: widget.confettiPieces,
+                    ),
+                  ),
+                  Positioned(
+                    left: 20,
+                    right: 20,
+                    top: screenSize.height * 0.12,
+                    child: Opacity(
+                      opacity: titleIn * (1 - titleOut),
+                      child: Transform.translate(
+                        offset: Offset(0, 18 * (1 - titleIn)),
+                        child: const Text(
+                          '引导关卡全通！',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFB45309),
+                            fontSize: 34,
+                            height: 1.1,
+                            fontWeight: FontWeight.w900,
+                            shadows: <Shadow>[
+                              Shadow(color: Color(0x99FFFFFF), blurRadius: 12),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 26,
+                    right: 26,
+                    top: screenSize.height * 0.13,
+                    child: Opacity(
+                      opacity: bodyIn,
+                      child: Transform.translate(
+                        offset: Offset(0, 18 * (1 - bodyIn)),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.74),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: const Color(0xFFFFD36A),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Flexible(
+                                child: Text(
+                                  '本金、涨跌、盈亏，你都摸过一遍啦！',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Color(0xFF7A4A08),
+                                    fontSize: 17,
+                                    height: 1.35,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Text('🐾', style: TextStyle(fontSize: 22)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 20,
+                    right: 20,
+                    top: screenSize.height * 0.12,
+                    child: Transform.translate(
+                      offset: Offset(0, -18 * (1 - myoEntrance)),
+                      child: Opacity(
+                        opacity: 0,
+                        child: const Text(
+                          '收获完成！',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFB45309),
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            shadows: <Shadow>[
+                              Shadow(color: Color(0x66FFFFFF), blurRadius: 10),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
+}
+
+class _ConfettiPainter extends CustomPainter {
+  const _ConfettiPainter({required this.progress, required this.pieces});
+
+  final double progress;
+  final List<_ConfettiPiece> pieces;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()..style = PaintingStyle.fill;
+    for (final _ConfettiPiece piece in pieces) {
+      final double localT = ((progress - piece.delay) / (1 - piece.delay))
+          .clamp(0.0, 1.0);
+      if (localT <= 0) {
+        continue;
+      }
+
+      final double launchT = Curves.easeOutCubic.transform(
+        (localT / 0.56).clamp(0.0, 1.0),
+      );
+      final double fallT = Curves.easeIn.transform(
+        ((localT - 0.46) / 0.54).clamp(0.0, 1.0),
+      );
+      final double baseX = size.width * piece.startX;
+      final double x = baseX + piece.peakXDrift * launchT;
+      final double peakY = size.height * piece.peakHeightFactor;
+      final double y =
+          lerpDouble(size.height + 24, peakY, launchT)! +
+          fallT * size.height * 0.22;
+      final double opacity =
+          1 - Curves.easeIn.transform(((localT - 0.82) / 0.18).clamp(0.0, 1.0));
+
+      paint.color = piece.color.withValues(alpha: opacity);
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(piece.rotation + piece.spin * localT);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: piece.size * 0.55,
+            height: piece.size,
+          ),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.pieces != pieces;
+  }
+}
+
+class _ConfettiPiece {
+  const _ConfettiPiece({
+    required this.startX,
+    required this.peakXDrift,
+    required this.peakHeightFactor,
+    required this.delay,
+    required this.size,
+    required this.rotation,
+    required this.spin,
+    required this.color,
+  });
+
+  final double startX;
+  final double peakXDrift;
+  final double peakHeightFactor;
+  final double delay;
+  final double size;
+  final double rotation;
+  final double spin;
+  final Color color;
 }
 
 class _PulsingButton extends StatefulWidget {
@@ -1007,7 +1687,8 @@ class _PulsingButton extends StatefulWidget {
   State<_PulsingButton> createState() => _PulsingButtonState();
 }
 
-class _PulsingButtonState extends State<_PulsingButton> with SingleTickerProviderStateMixin {
+class _PulsingButtonState extends State<_PulsingButton>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _scaleAnimation;
   late final Animation<double> _glowAnimation;
@@ -1020,13 +1701,15 @@ class _PulsingButtonState extends State<_PulsingButton> with SingleTickerProvide
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.04).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-    
-    _glowAnimation = Tween<double>(begin: 0.0, end: 8.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.04,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _glowAnimation = Tween<double>(
+      begin: 0.0,
+      end: 8.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

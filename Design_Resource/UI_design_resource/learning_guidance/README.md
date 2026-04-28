@@ -1,6 +1,6 @@
 # Learning Guidance Practice Assets
 
-> Last Updated: 2026-04-25  
+> Last Updated: 2026-04-28  
 > 用途：FirstSpot 投资者教育 12 章章末通行证小测的可复用练习背景与结果插画。
 
 ## 文件清单
@@ -15,6 +15,8 @@
 | `practice_summary_pass_02.png` | 章末小测通过结果插画版本 B | `testapp/assets/images/learning_guidance/` |
 | `practice_summary_retry.png` | 章末小测重练鼓励插画版本 A | `testapp/assets/images/learning_guidance/` |
 | `practice_summary_retry_02.png` | 章末小测重练鼓励插画版本 B | `testapp/assets/images/learning_guidance/` |
+| `myo_quiz_correct_micro.png` | 章末小测答对即时反馈小头像 | `testapp/assets/images/learning_guidance/` |
+| `myo_quiz_retry_micro.png` | 章末小测答错重试提示小头像 | `testapp/assets/images/learning_guidance/` |
 
 ## 使用规则
 

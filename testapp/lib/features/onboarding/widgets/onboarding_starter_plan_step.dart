@@ -10,6 +10,7 @@
 /// Email: 11911421@mail.sustech.edu.cn
 
 import 'dart:math' as math;
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/onboarding_models.dart';
@@ -36,6 +37,7 @@ class _OnboardingStarterPlanStepState extends State<OnboardingStarterPlanStep>
   bool _isFlipped = false;
   bool _isSaved = false;
   late final AnimationController _generateController;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -44,11 +46,13 @@ class _OnboardingStarterPlanStepState extends State<OnboardingStarterPlanStep>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..forward();
-    // TODO: 播放 assets/audio/card_assemble.mp3
+    // 播放 assets/audio/card_assemble.mp3
+    _audioPlayer.play(AssetSource('audio/card_assemble.mp3'));
   }
 
   @override
   void dispose() {
+    _audioPlayer.dispose();
     _generateController.dispose();
     super.dispose();
   }
@@ -85,7 +89,8 @@ class _OnboardingStarterPlanStepState extends State<OnboardingStarterPlanStep>
     setState(() {
       _isSaved = true;
     });
-    // TODO: 播放 assets/audio/save_coin.wav
+    // 播放 assets/audio/save_coin.wav
+    _audioPlayer.play(AssetSource('audio/save_coin.wav'));
     // TODO: 触发触感 success
     showXpFlyup(context, 20);
     Future.delayed(const Duration(milliseconds: 1100), () {
@@ -266,7 +271,8 @@ class _OnboardingStarterPlanStepState extends State<OnboardingStarterPlanStep>
                 setState(() {
                   _isFlipped = !_isFlipped;
                 });
-                // TODO: 播放 assets/audio/card_flip.wav
+                // 播放 assets/audio/card_flip.wav
+                _audioPlayer.play(AssetSource('audio/card_flip.wav'));
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 800),

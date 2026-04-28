@@ -68,7 +68,7 @@
 
 - 依赖 `shared_preferences`：首开完成状态、开发重置、Myo 彩蛋状态。
 - 依赖 `video_player`：Welcome 页播放 `assets/animations/myo_waving_welcome.mp4`。
-- 依赖 `audioplayers`：Welcome 点击声和 mini lesson 音效反馈。
+- 依赖 `audioplayers`：Welcome 点击声、mini lesson 音效反馈、以及首开各个步骤（Profile, Starter Plan, Reward Reveal）的音效反馈。
 - 依赖 `fl_chart`：mini lesson 第 2 关趋势图。
 - 依赖 Flutter `Overlay`：通过 `xp_flyup.dart` 在界面右上角展示非阻塞 XP 飞行动效。
 - 依赖 `features/learning_guidance/data/guidance_lessons.dart`：金库读取当前已获得概念卡的展示数据，V1 首开完成后默认展示 `CARD-01`。
@@ -153,6 +153,7 @@ FirstOpenGatePage
 - 2026-04-25: 新增 `xp_flyup.dart`，将 `+2/+10/+20 XP` 奖励反馈从底部灰色 SnackBar 改为右上角向上飘动并淡出的非阻塞动画。
 - 2026-04-25: Reward Reveal 移除 Streak 点火交互；`CARD-01` 翻开后改为用户再次点击屏幕收下卡片，再进入下一界面。
 - 2026-04-25: 修复 Starter Plan 与 Reward Reveal 的 3D 翻卡镜像问题；翻转超过 90° 后对当前可见卡面做内层 180° 校正，避免文字和问号卡水平反转。
+- 2026-04-28: 将 `Design_Resource/Sound_design_resource/` 下的音频素材同步至 `testapp/assets/audio/`，并更新 `pubspec.yaml` 统一声明。在 `OnboardingProfileLiteStep`、`OnboardingStarterPlanStep` 和 `OnboardingRewardRevealStep` 中接入 `AudioPlayer` 替换了原有的音频 TODO 占位符。
 - 2026-04-25: Mini lesson 夏天选项与秋天 Emoji 选择后，Myo 反馈改为显式等待 0.6s 输入态，避免用户选择后反馈过快。
 - 2026-04-25: Welcome 页主体改为响应式滚动布局，修复 800x600 测试视口下的底部 overflow；同步更新 onboarding 测试为当前聊天流交互，并避免对持续视频动画使用 `pumpAndSettle`。
 - 2026-04-25: Mini lesson 关卡切换时清空上一关聊天记录，再初始化下一关开场对话，避免旧对话占用新环节空间。

@@ -30,16 +30,24 @@ class GuidanceLearningPage extends StatefulWidget {
 }
 
 class _GuidanceLearningPageState extends State<GuidanceLearningPage>
-    with SingleTickerProviderStateMixin {
-  static const Duration _conceptMyoThinkingDelay = Duration(milliseconds: 600);
+    with TickerProviderStateMixin {
+  static const Duration _conceptMyoThinkingDelay = Duration(milliseconds: 800);
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   late final AnimationController _conceptChatController;
+  late final AnimationController _caseDropPulseController;
   final ScrollController _conceptChatScrollController = ScrollController();
+  final ScrollController _caseScrollController = ScrollController();
 
   GuidanceLesson? _selectedLesson;
   GuidanceLesson? _activeConceptLesson;
+  GuidanceLesson? _activeCaseLesson;
   final Map<String, Set<int>> _completedLearningSteps = <String, Set<int>>{};
+  final Map<String, int> _caseRevealedSegmentCounts = <String, int>{};
+  bool _caseIntroVisible = false;
+  bool _caseGuideVisible = false;
+  bool _isCaseDragging = false;
+  int _caseGuideToken = 0;
   final Map<String, List<String>> _conceptDialogueSelections =
       <String, List<String>>{};
   final Map<String, int> _conceptRevealedResponseCounts = <String, int>{};
@@ -57,13 +65,19 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
       duration: const Duration(milliseconds: 420),
       reverseDuration: const Duration(milliseconds: 420),
     );
+    _caseDropPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 720),
+    );
     unawaited(_configureAudioPlayer());
   }
 
   @override
   void dispose() {
     _conceptChatController.dispose();
+    _caseDropPulseController.dispose();
     _conceptChatScrollController.dispose();
+    _caseScrollController.dispose();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -81,11 +95,13 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   Widget build(BuildContext context) {
     final GuidanceLesson? selected = _selectedLesson;
     final GuidanceLesson? activeConceptLesson = _activeConceptLesson;
+    final GuidanceLesson? activeCaseLesson = _activeCaseLesson;
     final bool isConceptChatOpen =
         selected != null && activeConceptLesson != null;
+    final bool isCaseOpen = selected != null && activeCaseLesson != null;
     return Scaffold(
       backgroundColor: const Color(0xFFF7FAF8),
-      appBar: isConceptChatOpen
+      appBar: isConceptChatOpen || isCaseOpen
           ? null
           : AppBar(
               backgroundColor: const Color(0xFFF7FAF8),
@@ -107,7 +123,9 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
               ),
             ),
       body: SafeArea(
-        child: isConceptChatOpen
+        child: isCaseOpen
+            ? _buildCaseRoute(activeCaseLesson)
+            : isConceptChatOpen
             ? _buildConceptChatRoute(activeConceptLesson)
             : selected == null
             ? _buildLessonList()
@@ -129,6 +147,477 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     return SlideTransition(
       position: slideAnimation,
       child: _buildConceptChatFrame(lesson),
+    );
+  }
+
+  Widget _buildCaseRoute(GuidanceLesson lesson) {
+    final int revealedCount = _caseRevealedSegmentCounts[lesson.id] ?? 0;
+    final bool isComplete = revealedCount >= _ipoCaseSegments.length;
+    final bool hasDropPrompt =
+        !_caseIntroVisible &&
+        _caseGuideVisible &&
+        revealedCount > 0 &&
+        !isComplete;
+    return Container(
+      color: const Color(0xFFF7FAF8),
+      child: Stack(
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(6, 4, 16, 8),
+                child: Row(
+                  children: <Widget>[
+                    IconButton(
+                      tooltip: '返回章节学习',
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      onPressed: _closeCaseRoute,
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          const Text(
+                            '案例 · IPO 股份旅程',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Color(0xFF162025),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            lesson.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF5D696F),
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _buildTinyPill(
+                      '$revealedCount / ${_ipoCaseSegments.length}',
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  controller: _caseScrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 34),
+                  children: <Widget>[
+                    const SizedBox(height: 44),
+                    for (int i = 0; i < revealedCount; i += 1) ...<Widget>[
+                      _buildCaseSegment(
+                        lesson,
+                        _ipoCaseSegments[i],
+                        i,
+                        isDropTarget: hasDropPrompt && i == revealedCount - 1,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (isComplete) _buildCaseCompleteCard(lesson),
+                    if (hasDropPrompt) const SizedBox(height: 220),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            top: 8,
+            left: 20,
+            right: 20,
+            child: IgnorePointer(
+              child: AnimatedOpacity(
+                opacity: _caseIntroVisible ? 1 : 0,
+                duration: const Duration(milliseconds: 240),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE4F6FF),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFCFEFFF)),
+                    boxShadow: const <BoxShadow>[
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 16,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Myo：跟我从公司出发，看一份股份怎样来到散户手里。',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF086A9D),
+                      height: 1.35,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 18,
+            child: AnimatedSlide(
+              offset: _caseIntroVisible || hasDropPrompt
+                  ? Offset.zero
+                  : const Offset(0, 1.4),
+              duration: const Duration(milliseconds: 420),
+              curve: Curves.easeOutBack,
+              child: AnimatedOpacity(
+                opacity: _caseIntroVisible || hasDropPrompt ? 1 : 0,
+                duration: const Duration(milliseconds: 240),
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.52,
+                  width: double.infinity,
+                  child: Stack(
+                    alignment: Alignment.bottomCenter,
+                    children: <Widget>[
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Image.asset(
+                            'assets/images/characters/myo/myo_lay_face_smile.png',
+                            fit: BoxFit.cover,
+                            alignment: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                      if (hasDropPrompt)
+                        Positioned(
+                          left: 24,
+                          right: 24,
+                          bottom: 122,
+                          child: _buildCaseGuidePanel(lesson, revealedCount),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCaseSegment(
+    GuidanceLesson lesson,
+    _IpoCaseSegment segment,
+    int index, {
+    bool isDropTarget = false,
+  }) {
+    Widget content = _buildCaseSegmentCard(segment, index, highlight: false);
+    if (!isDropTarget) {
+      return content;
+    }
+
+    final String expectedParticipant = _ipoCaseSegments[index + 1].participant;
+    return DragTarget<String>(
+      key: ValueKey<String>('ipo_case_drop_target_$index'),
+      onWillAcceptWithDetails: (DragTargetDetails<String> details) {
+        return details.data == expectedParticipant;
+      },
+      onAcceptWithDetails: (DragTargetDetails<String> details) {
+        _acceptCaseDrop(lesson, details.data);
+      },
+      builder:
+          (
+            BuildContext context,
+            List<String?> candidateData,
+            List<dynamic> rejectedData,
+          ) {
+            final bool highlight = _isCaseDragging && candidateData.isNotEmpty;
+            return AnimatedBuilder(
+              animation: _caseDropPulseController,
+              builder: (BuildContext context, Widget? child) {
+                return _buildCaseSegmentCard(
+                  segment,
+                  index,
+                  highlight: highlight,
+                  pulseValue: highlight ? _caseDropPulseController.value : 0,
+                );
+              },
+            );
+          },
+    );
+  }
+
+  Widget _buildCaseSegmentCard(
+    _IpoCaseSegment segment,
+    int index, {
+    required bool highlight,
+    double pulseValue = 0,
+  }) {
+    final Color borderColor =
+        Color.lerp(
+          const Color(0xFFE6E8EC),
+          const Color(0xFF1FA95B),
+          highlight ? 0.55 + pulseValue * 0.45 : 0,
+        ) ??
+        const Color(0xFFE6E8EC);
+    final Color glowColor =
+        Color.lerp(
+          const Color(0x08000000),
+          const Color(0x331FA95B),
+          highlight ? 0.35 + pulseValue * 0.65 : 0,
+        ) ??
+        const Color(0x08000000);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor, width: highlight ? 2.4 : 1),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: glowColor,
+            blurRadius: highlight ? 24 : 12,
+            spreadRadius: highlight ? 2 : 0,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  '${index + 1}',
+                  style: const TextStyle(
+                    color: Color(0xFF1FA95B),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FinanceTermText(
+                  text: segment.title,
+                  highlightedTerms: segment.terms,
+                  style: const TextStyle(
+                    color: Color(0xFF162025),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          FinanceTermText(
+            text: segment.body,
+            highlightedTerms: segment.terms,
+            style: const TextStyle(
+              color: Color(0xFF5D696F),
+              height: 1.5,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (highlight) ...<Widget>[
+            const SizedBox(height: 12),
+            const Text(
+              '把下一位股份参与方拖进来',
+              style: TextStyle(
+                color: Color(0xFF1FA95B),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCaseGuidePanel(GuidanceLesson lesson, int revealedCount) {
+    final _IpoCaseSegment nextSegment = _ipoCaseSegments[revealedCount];
+    final String promptText = '把“${nextSegment.participant}”拖进上一幕，看看股份下一站去哪里';
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.96),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFDDE6E1)),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 14,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Text(
+            promptText,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Color(0xFF304348),
+              height: 1.35,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: LongPressDraggable<String>(
+            data: nextSegment.participant,
+            dragAnchorStrategy: pointerDragAnchorStrategy,
+            onDragStarted: () {
+              _caseDropPulseController.repeat(reverse: true);
+              setState(() {
+                _isCaseDragging = true;
+              });
+            },
+            onDragEnd: (_) {
+              if (!mounted) {
+                return;
+              }
+              _caseDropPulseController
+                ..stop()
+                ..reset();
+              setState(() {
+                _isCaseDragging = false;
+              });
+            },
+            feedback: Material(
+              color: Colors.transparent,
+              child: _buildCaseParticipantChip(
+                nextSegment.participant,
+                isDragging: true,
+              ),
+            ),
+            childWhenDragging: _buildCaseParticipantChip(
+              nextSegment.participant,
+              isGhost: true,
+            ),
+            child: _buildCaseParticipantChip(
+              nextSegment.participant,
+              key: ValueKey<String>('ipo_case_drag_card_$revealedCount'),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCaseParticipantChip(
+    String participant, {
+    Key? key,
+    bool isDragging = false,
+    bool isGhost = false,
+  }) {
+    return AnimatedOpacity(
+      key: key,
+      opacity: isGhost ? 0.32 : 1,
+      duration: const Duration(milliseconds: 160),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        constraints: const BoxConstraints(minWidth: 176, maxWidth: 232),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        decoration: BoxDecoration(
+          color: isDragging ? const Color(0xFF1FA95B) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isDragging
+                ? const Color(0xFF127541)
+                : const Color(0xFFD5E8DC),
+            width: 2,
+          ),
+          boxShadow: const <BoxShadow>[
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 16,
+              offset: Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              Icons.open_with_rounded,
+              color: isDragging ? Colors.white : const Color(0xFF1FA95B),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                participant,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDragging ? Colors.white : const Color(0xFF162025),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCaseCompleteCard(GuidanceLesson lesson) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF8ED8A6), width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const FinanceTermText(
+            text: '案例点亮：你已经走完 IPO 到二级市场的股份路线。',
+            highlightedTerms: <String>{'IPO', '二级市场', '股份'},
+            style: TextStyle(
+              color: Color(0xFF1F5B39),
+              height: 1.45,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: _closeCaseRoute,
+              icon: const Icon(Icons.check_circle_rounded),
+              label: const Text('返回章节'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1FA95B),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -226,6 +715,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
                         lesson,
                         dialogue.turns[completedTurns],
                       )
+                    else if (!isComplete &&
+                        _conceptTypingKey ==
+                            _conceptPromptKey(lesson.id, completedTurns))
+                      _buildConceptTypingBubble()
                     else if (isComplete && _canShowConceptComplete(lesson))
                       _buildConceptCompleteCard(lesson),
                   ],
@@ -299,7 +792,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
       const SizedBox(height: 8),
       _buildChatUserBubble(selectedOption.text),
       const SizedBox(height: 8),
-      if (isTyping) ...<Widget>[
+      if (isTyping && visibleResponseCount == 0) ...<Widget>[
         _buildConceptTypingBubble(),
         const SizedBox(height: 8),
       ],
@@ -308,6 +801,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
           responseSegments[i],
           highlightedTerms: selectedOption.highlightedTerms,
         ),
+        const SizedBox(height: 8),
+      ],
+      if (isTyping && visibleResponseCount > 0) ...<Widget>[
+        _buildConceptTypingBubble(),
         const SizedBox(height: 8),
       ],
       const SizedBox(height: 16),
@@ -1072,121 +1569,136 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   ) {
     final bool isComplete = _isLearningStepComplete(lesson, index);
     final bool usesConceptChat = _usesConceptChat(lesson, index);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isComplete ? const Color(0xFFE8F5E9) : const Color(0xFFF9FBFA),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isComplete ? const Color(0xFF8ED8A6) : const Color(0xFFDDE7E1),
-          width: isComplete ? 2 : 1,
+    final bool usesCasePresentation = _usesCasePresentation(lesson, index);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: usesCasePresentation ? () => _openCasePresentation(lesson) : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isComplete ? const Color(0xFFE8F5E9) : const Color(0xFFF9FBFA),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isComplete
+                ? const Color(0xFF8ED8A6)
+                : const Color(0xFFDDE7E1),
+            width: isComplete ? 2 : 1,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                width: 52,
-                height: 52,
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFDDE7E1)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 52,
+                  height: 52,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFDDE7E1)),
+                  ),
+                  child: Image.asset(
+                    _myoAssetForBeat(beat.kind),
+                    fit: BoxFit.contain,
+                  ),
                 ),
-                child: Image.asset(
-                  _myoAssetForBeat(beat.kind),
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        _buildTinyPill('${index + 1} · ${beat.kind}'),
-                        const Spacer(),
-                        Icon(
-                          isComplete
-                              ? Icons.check_circle_rounded
-                              : Icons.radio_button_unchecked_rounded,
-                          color: isComplete
-                              ? const Color(0xFF1FA95B)
-                              : const Color(0xFFB0B9C0),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          _buildTinyPill('${index + 1} · ${beat.kind}'),
+                          const Spacer(),
+                          Icon(
+                            isComplete
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            color: isComplete
+                                ? const Color(0xFF1FA95B)
+                                : const Color(0xFFB0B9C0),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      FinanceTermText(
+                        text: beat.title,
+                        highlightedTerms: _activeTermsFor(
+                          lesson,
+                          _slot(lesson, 'beat_${index}_title'),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    FinanceTermText(
-                      text: beat.title,
-                      highlightedTerms: _activeTermsFor(
-                        lesson,
-                        _slot(lesson, 'beat_${index}_title'),
+                        style: const TextStyle(
+                          color: Color(0xFF162025),
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                      style: const TextStyle(
-                        color: Color(0xFF162025),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            FinanceTermText(
+              text: beat.body,
+              highlightedTerms: _activeTermsFor(
+                lesson,
+                _slot(lesson, 'beat_${index}_body'),
+              ),
+              style: const TextStyle(
+                color: Color(0xFF5D696F),
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: usesConceptChat
+                    ? () => _openConceptChat(lesson)
+                    : usesCasePresentation
+                    ? () => _openCasePresentation(lesson)
+                    : () => _toggleLearningStep(lesson, index),
+                icon: Icon(
+                  usesConceptChat
+                      ? Icons.chat_bubble_rounded
+                      : usesCasePresentation
+                      ? Icons.movie_filter_rounded
+                      : isComplete
+                      ? Icons.check_circle_rounded
+                      : Icons.touch_app_rounded,
+                  size: 18,
+                ),
+                label: Text(
+                  usesConceptChat
+                      ? _conceptChatButtonLabel(lesson)
+                      : usesCasePresentation
+                      ? isComplete
+                            ? '复习案例讲解'
+                            : '进入案例讲解'
+                      : isComplete
+                      ? '已点亮'
+                      : '点一下，完成这步',
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: isComplete
+                      ? const Color(0xFF1FA95B)
+                      : const Color(0xFFB45309),
+                  textStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          FinanceTermText(
-            text: beat.body,
-            highlightedTerms: _activeTermsFor(
-              lesson,
-              _slot(lesson, 'beat_${index}_body'),
             ),
-            style: const TextStyle(
-              color: Color(0xFF5D696F),
-              height: 1.45,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: usesConceptChat
-                  ? () => _openConceptChat(lesson)
-                  : () => _toggleLearningStep(lesson, index),
-              icon: Icon(
-                usesConceptChat
-                    ? Icons.chat_bubble_rounded
-                    : isComplete
-                    ? Icons.check_circle_rounded
-                    : Icons.touch_app_rounded,
-                size: 18,
-              ),
-              label: Text(
-                usesConceptChat
-                    ? _conceptChatButtonLabel(lesson)
-                    : isComplete
-                    ? '已点亮'
-                    : '点一下，完成这步',
-              ),
-              style: TextButton.styleFrom(
-                foregroundColor: isComplete
-                    ? const Color(0xFF1FA95B)
-                    : const Color(0xFFB45309),
-                textStyle: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1280,6 +1792,146 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
 
   bool _isLearningStepComplete(GuidanceLesson lesson, int index) {
     return _completedLearningSteps[lesson.id]?.contains(index) ?? false;
+  }
+
+  bool _usesCasePresentation(GuidanceLesson lesson, int index) {
+    return lesson.id == 'CH01' && index == 1;
+  }
+
+  void _openCasePresentation(GuidanceLesson lesson) {
+    setState(() {
+      _activeCaseLesson = lesson;
+      _caseIntroVisible = true;
+      _caseGuideVisible = false;
+      _isCaseDragging = false;
+      _caseGuideToken += 1;
+    });
+    _caseDropPulseController
+      ..stop()
+      ..reset();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_caseScrollController.hasClients) {
+        _caseScrollController.jumpTo(0);
+      }
+    });
+    unawaited(_playGuidanceAudio(_GuidanceAudio.caseSlide));
+    unawaited(_finishCaseIntro(lesson));
+  }
+
+  Future<void> _finishCaseIntro(GuidanceLesson lesson) async {
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    if (!mounted || _activeCaseLesson?.id != lesson.id) {
+      return;
+    }
+    setState(() {
+      _caseIntroVisible = false;
+      final int current = _caseRevealedSegmentCounts[lesson.id] ?? 0;
+      if (current == 0) {
+        _caseRevealedSegmentCounts[lesson.id] = 1;
+      }
+    });
+    _scrollCaseToBottom();
+    unawaited(_showCaseGuidePrompt(lesson));
+  }
+
+  void _revealNextCaseSegment(GuidanceLesson lesson) {
+    final int current = _caseRevealedSegmentCounts[lesson.id] ?? 0;
+    if (current >= _ipoCaseSegments.length) {
+      return;
+    }
+
+    final bool wasLessonComplete = _isLessonLearningComplete(lesson);
+    setState(() {
+      _caseRevealedSegmentCounts[lesson.id] = current + 1;
+      _caseGuideVisible = false;
+      _isCaseDragging = false;
+      if (current + 1 >= _ipoCaseSegments.length) {
+        final Set<int> completed = _completedLearningSteps.putIfAbsent(
+          lesson.id,
+          () => <int>{},
+        );
+        completed.add(1);
+      }
+    });
+    _scrollCaseToBottom();
+    if (current + 1 < _ipoCaseSegments.length) {
+      unawaited(_showCaseGuidePrompt(lesson));
+    }
+
+    if (!wasLessonComplete && _isLessonLearningComplete(lesson)) {
+      unawaited(_playGuidanceAudio(_GuidanceAudio.nextUnlock));
+    }
+  }
+
+  void _scrollCaseToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_caseScrollController.hasClients) {
+        return;
+      }
+      _caseScrollController.animateTo(
+        _caseScrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  void _closeCaseRoute() {
+    setState(() {
+      _activeCaseLesson = null;
+      _caseIntroVisible = false;
+      _caseGuideVisible = false;
+      _isCaseDragging = false;
+      _caseGuideToken += 1;
+    });
+    _caseDropPulseController
+      ..stop()
+      ..reset();
+  }
+
+  Future<void> _showCaseGuidePrompt(GuidanceLesson lesson) async {
+    final int token = ++_caseGuideToken;
+    await Future<void>.delayed(const Duration(milliseconds: 320));
+    if (!mounted ||
+        _activeCaseLesson?.id != lesson.id ||
+        token != _caseGuideToken) {
+      return;
+    }
+    final int revealedCount = _caseRevealedSegmentCounts[lesson.id] ?? 0;
+    if (revealedCount <= 0 || revealedCount >= _ipoCaseSegments.length) {
+      return;
+    }
+    setState(() {
+      _caseGuideVisible = true;
+      _isCaseDragging = false;
+    });
+  }
+
+  void _acceptCaseDrop(GuidanceLesson lesson, String participant) {
+    final int revealedCount = _caseRevealedSegmentCounts[lesson.id] ?? 0;
+    if (revealedCount <= 0 || revealedCount >= _ipoCaseSegments.length) {
+      return;
+    }
+    final String expectedParticipant =
+        _ipoCaseSegments[revealedCount].participant;
+    if (participant != expectedParticipant) {
+      return;
+    }
+    setState(() {
+      _caseGuideVisible = false;
+      _isCaseDragging = false;
+      _caseGuideToken += 1;
+    });
+    _caseDropPulseController
+      ..stop()
+      ..reset();
+    unawaited(_playGuidanceAudio(_GuidanceAudio.caseSlide));
+    Future<void>.delayed(const Duration(milliseconds: 220), () {
+      if (!mounted || _activeCaseLesson?.id != lesson.id) {
+        return;
+      }
+      _revealNextCaseSegment(lesson);
+    });
   }
 
   Set<String> _activeTermsFor(GuidanceLesson lesson, String slotId) {
@@ -1412,6 +2064,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     return '$lessonId:$turnIndex';
   }
 
+  String _conceptPromptKey(String lessonId, int turnIndex) {
+    return '$lessonId:prompt:$turnIndex';
+  }
+
   String _conceptCompleteKey(String lessonId) {
     return '$lessonId:complete';
   }
@@ -1430,7 +2086,8 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   }
 
   bool _canShowNextConceptTurn(GuidanceLesson lesson) {
-    final int selectedCount = _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    final int selectedCount =
+        _conceptDialogueSelections[lesson.id]?.length ?? 0;
     final int advancedCount = _conceptAdvancedTurnCounts[lesson.id] ?? 0;
     return advancedCount >= selectedCount;
   }
@@ -1479,13 +2136,14 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     }
 
     for (int i = 0; i < segments.length; i += 1) {
+      final bool hasNextSegment = i < segments.length - 1;
       setState(() {
-        _conceptTypingKey = null;
+        _conceptTypingKey = hasNextSegment ? turnKey : null;
         _conceptRevealedResponseCounts[turnKey] = i + 1;
       });
       _scrollConceptChatToBottom();
 
-      if (i < segments.length - 1) {
+      if (hasNextSegment) {
         await Future<void>.delayed(_conceptSegmentDelay(segments[i]));
         if (!mounted || token != _conceptRevealToken) {
           return;
@@ -1493,7 +2151,20 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
       }
     }
 
+    final GuidanceConceptDialogue? dialogue =
+        guidanceConceptDialogues[lesson.chapterNumber];
+    if (dialogue != null && turnIndex + 1 < dialogue.turns.length) {
+      final String nextPromptKey = _conceptPromptKey(lesson.id, turnIndex + 1);
+      setState(() => _conceptTypingKey = nextPromptKey);
+      _scrollConceptChatToBottom();
+      await Future<void>.delayed(_conceptMyoThinkingDelay);
+      if (!mounted || token != _conceptRevealToken) {
+        return;
+      }
+    }
+
     setState(() {
+      _conceptTypingKey = null;
       _conceptAdvancedTurnCounts[lesson.id] = turnIndex + 1;
     });
     _scrollConceptChatToBottom();
@@ -1509,7 +2180,8 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     if (dialogue == null) {
       return;
     }
-    final int selectedCount = _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    final int selectedCount =
+        _conceptDialogueSelections[lesson.id]?.length ?? 0;
     if (selectedCount < dialogue.turns.length ||
         (_conceptAdvancedTurnCounts[lesson.id] ?? 0) < dialogue.turns.length) {
       return;
@@ -1534,16 +2206,26 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   }
 
   void _openConceptChat(GuidanceLesson lesson) {
-    _conceptRevealToken += 1;
+    final int token = ++_conceptRevealToken;
     final GuidanceConceptDialogue? dialogue =
         guidanceConceptDialogues[lesson.chapterNumber];
-    final int selectedCount = _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    final int selectedCount =
+        _conceptDialogueSelections[lesson.id]?.length ?? 0;
+    final bool shouldRevealFirstPrompt = dialogue != null && selectedCount == 0;
     setState(() {
       _activeConceptLesson = lesson;
-      _conceptTypingKey = null;
-      _conceptAdvancedTurnCounts[lesson.id] = selectedCount;
+      _conceptTypingKey = shouldRevealFirstPrompt
+          ? _conceptPromptKey(lesson.id, 0)
+          : null;
+      _conceptAdvancedTurnCounts[lesson.id] = shouldRevealFirstPrompt
+          ? -1
+          : selectedCount;
       if (dialogue != null) {
-        for (int i = 0; i < selectedCount && i < dialogue.turns.length; i += 1) {
+        for (
+          int i = 0;
+          i < selectedCount && i < dialogue.turns.length;
+          i += 1
+        ) {
           final GuidanceConceptTurn turn = dialogue.turns[i];
           final String? selectedOptionId =
               _conceptDialogueSelections[lesson.id]?[i];
@@ -1562,6 +2244,24 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     _conceptChatController.forward(from: 0);
     _scrollConceptChatToBottom();
     unawaited(_playGuidanceAudio(_GuidanceAudio.conceptReveal));
+    if (shouldRevealFirstPrompt) {
+      unawaited(_revealInitialConceptPrompt(lesson, token));
+    }
+  }
+
+  Future<void> _revealInitialConceptPrompt(
+    GuidanceLesson lesson,
+    int token,
+  ) async {
+    await Future<void>.delayed(_conceptMyoThinkingDelay);
+    if (!mounted || token != _conceptRevealToken) {
+      return;
+    }
+    setState(() {
+      _conceptTypingKey = null;
+      _conceptAdvancedTurnCounts[lesson.id] = 0;
+    });
+    _scrollConceptChatToBottom();
   }
 
   Future<void> _closeConceptChat() async {
@@ -1593,7 +2293,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     );
     if (turnIndex < 0 ||
         _conceptTypingKey != null ||
-        (_conceptRevealedResponseCounts[_conceptTurnKey(lesson.id, turnIndex)] ??
+        (_conceptRevealedResponseCounts[_conceptTurnKey(
+                  lesson.id,
+                  turnIndex,
+                )] ??
                 0) >
             0) {
       return;
@@ -1771,6 +2474,59 @@ class _EducationBeat {
   final String body;
 }
 
+class _IpoCaseSegment {
+  const _IpoCaseSegment({
+    required this.participant,
+    required this.title,
+    required this.body,
+    required this.terms,
+  });
+
+  final String participant;
+  final String title;
+  final String body;
+  final Set<String> terms;
+}
+
+const List<_IpoCaseSegment> _ipoCaseSegments = <_IpoCaseSegment>[
+  _IpoCaseSegment(
+    participant: '公司',
+    title: '第一幕：公司拿出股份',
+    body: '一家公司想募集资金，把公司所有权切成很多股份，通过 IPO 公开发行。这里的钱主要流向发行方，也就是公司。',
+    terms: <String>{'股份', '公开发行'},
+  ),
+  _IpoCaseSegment(
+    participant: '承销商',
+    title: '第二幕：承销商把发行组织起来',
+    body: '承销商帮助发行方设计发行方案、估值定价、路演沟通和销售安排。它不是最终持有股份的人，更像把新股送上发行通道的组织者。',
+    terms: <String>{'承销商', '发行方'},
+  ),
+  _IpoCaseSegment(
+    participant: '基石投资者',
+    title: '第三幕：基石投资者先放下一个锚',
+    body: '有些发行会引入基石投资者。它们提前承诺认购较大份额，给市场一个参考锚，但这不等于上市后价格一定上涨。',
+    terms: <String>{'基石投资者', '散户'},
+  ),
+  _IpoCaseSegment(
+    participant: '交易所',
+    title: '第四幕：交易所提供上市与交易入口',
+    body: '交易所提供发行上市和二级市场交易的规则入口。它像有规则的市场场地，负责规则和交易安排，但不是这批股份的最终买家。',
+    terms: <String>{'交易所', '二级市场', '股份'},
+  ),
+  _IpoCaseSegment(
+    participant: '散户',
+    title: '第五幕：散户打新认购',
+    body: '散户可以通过打新提交新股申购。申购成功后，散户拿到配售的股份；如果没有中签，股份就不会来到他的账户。',
+    terms: <String>{'打新', '散户', '股份'},
+  ),
+  _IpoCaseSegment(
+    participant: '二级市场',
+    title: '第六幕：上市后进入二级市场',
+    body: '股票上市后，散户可以继续持有，也可以在二级市场卖给新的买家。这时成交资金主要在投资者之间流转；如果价格跌破发行价，就叫破发。',
+    terms: <String>{'二级市场', '散户', '破发'},
+  ),
+];
+
 const List<_EducationBeat> _fallbackBeats = <_EducationBeat>[
   _EducationBeat(
     kind: '概念',
@@ -1789,210 +2545,212 @@ const List<_EducationBeat> _fallbackBeats = <_EducationBeat>[
   ),
 ];
 
-const Map<int, List<_EducationBeat>> _educationBeats =
-    <int, List<_EducationBeat>>{
-      1: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '二级市场是“已发行证券的转手集市”',
-          body: '买股票通常不是把钱直接交给公司，而是和另一个投资者交换公司所有权的一小部分。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '像二手平台转让球鞋',
-          body: '球鞋品牌第一次卖鞋像一级市场，朋友把鞋转给你更像二级市场；你付的钱主要给卖家。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '资金流向小判断',
-          body: '点选“公司、卖家、交易所、监管机构”中的资金主要接收方，Myo 会解释每一方的角色。',
-        ),
-      ],
-      2: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '股票代码是市场门牌号',
-          body: '600、300、688、8/4 开头分别提供不同板块线索，但它们不是收益暗示。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '先看小区，再看房子',
-          body: '看到陌生代码时，先确认它属于哪个交易所和板块，再了解交易门槛、波动和风险提示。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '代码贴纸配对',
-          body: '把常见代码前缀拖到“主板、创业板、科创板、北交所”的地图区域。',
-        ),
-      ],
-      3: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '交易规则是新手安全带',
-          body: '交易时间、涨跌幅、买入后通常次日可卖等规则，先帮你避免按钮点错。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '快递不是 24 小时都揽收',
-          body: '市场也有工作时间。午间、收盘后和节假日不能按连续竞价逻辑理解。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '交易日时间轴',
-          body: '把“上午连续竞价、午休、下午连续竞价、收盘集合竞价”放到正确顺序。',
-        ),
-      ],
-      4: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '行情图是记录本，不是水晶球',
-          body: 'K 线记录开、高、低、收和成交信息，但单根形态不能替你做投资决策。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '像体温记录表',
-          body: '一天体温升高只能提示关注原因，不能单独诊断所有问题；价格图也一样。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '周期放大镜',
-          body: '滑动切换分时、日线、周线，观察短周期噪音和长周期轮廓的差异。',
-        ),
-      ],
-      5: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '股价高不等于估值贵',
-          body: '估值要把价格放回利润、资产、分红和成长质量里看，不能只看一个绝对数字。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '同样 100 元，买到的东西不同',
-          body: '一杯水 100 元很贵，一件耐穿外套 100 元可能合理；股票也要看背后的盈利和资产质量。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '估值天平',
-          body: '把“PE、PB、股息率”分别拖到“利润、净资产、现金分红”的秤盘上。',
-        ),
-      ],
-      6: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '看公司先看它怎么赚钱',
-          body: '业务、收入、利润、现金流和负债共同组成公司简历，热搜不能替代研究。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '像面试一家公司',
-          body: '先问它卖什么、客户是谁、钱有没有收回来，再看估值和风险。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '公司简历排序',
-          body: '将“主营业务、利润、现金流、负债、风险提示”排成新手研究顺序。',
-        ),
-      ],
-      7: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '风险来自市场、公司和情绪',
-          body: '市场大风、公司单点问题和自己的冲动，都会让收益路径变得不稳定。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '天气、路况和驾驶员',
-          body: '大盘波动像天气，公司风险像路况，情绪风险像驾驶员分心，工具要分别对应。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '风险工具配对',
-          body: '把“分散、现金缓冲、冷静期”匹配到不同风险来源。',
-        ),
-      ],
-      8: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '指数基金是一篮子规则',
-          body: '宽基指数把一组代表性资产装进透明篮子，优势是分散、规则清楚、费用通常较低。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '买水果篮，不押单个水果',
-          body: '单个水果可能坏掉，一篮子更能分散单点问题，但篮子本身仍会随市场波动。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '篮子宽窄判断',
-          body: '选择“宽基、行业、主题”三类篮子的风险集中程度。',
-        ),
-      ],
-      9: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '有些钱的任务是站岗',
-          body: '应急金和短期刚需资金优先安全和流动性，不应该承担过高波动。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '学费钱不能坐过山车',
-          body: '明年要交学费的钱，不适合放进高波动资产，因为它没有时间等修复。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '资金期限分层',
-          body: '把“随时用、1 年内用、5 年以上不用”的资金放到不同风险层。',
-        ),
-      ],
-      10: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '情绪正常，动作要慢',
-          body: '从众、FOMO 和损失厌恶都会出现，关键是用规则给冲动加延迟。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '朋友圈热闹不是买入理由',
-          body: '牛市刷屏会放大“我也要上车”的压力，但投资动作需要回到仓位和估值规则。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '暂停键演练',
-          body: '为“暴涨、暴跌、朋友推荐”三个场景选择冷静期、仓位上限或投资日志。',
-        ),
-      ],
-      11: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '定投是执行规则，不是保证盈利',
-          body: '它把“一次猜对时点”变成“长期按固定金额和频率执行”，前提是资金可承受。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '像每月固定存钱',
-          body: '收入稳定时设定小额自动计划，遇到波动先检查生活安全垫，而不是硬撑。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '计划可承受性检查',
-          body: '输入月结余区间后，选择不会挤压生活和应急金的定投档位。',
-        ),
-      ],
-      12: <_EducationBeat>[
-        _EducationBeat(
-          kind: '概念',
-          title: '组合让每类资产各司其职',
-          body: '现金管流动性，固收做稳定器，权益承担长期成长来源之一，比例由用途和期限决定。',
-        ),
-        _EducationBeat(
-          kind: '案例',
-          title: '把钱放进三层工具箱',
-          body: '三个月内要用的钱放上层随手拿，长期不用的钱才可能放到底层成长仓。',
-        ),
-        _EducationBeat(
-          kind: '互动',
-          title: '个人投资系统 v1.0',
-          body: '汇总前 11 章的定投计划、纪律清单、风险上限和资金分层，生成可保存的系统草稿。',
-        ),
-      ],
-    };
+const Map<int, List<_EducationBeat>>
+_educationBeats = <int, List<_EducationBeat>>{
+  1: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '二级市场是“已发行证券的转手集市”',
+      body: '买股票通常不是把钱直接交给公司，而是和另一个投资者交换公司所有权的一小部分。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: 'Myo 带你走一遍 IPO 股份旅程',
+      body:
+          '点击进入滚动式案例讲解：Myo 会先登场，再把股份从公司公开募股、承销发行、基石认购、交易所上市，到散户打新和二级市场交易逐段讲清楚。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '复盘股份传递路线',
+      body:
+          '完成案例后，再点亮这张复盘卡：公司拿出股份，承销商组织发行，基石投资者提供认购锚，交易所提供规则入口，散户通过打新获得配售并在二级市场交易。',
+    ),
+  ],
+  2: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '股票代码是市场门牌号',
+      body: '600、300、688、8/4 开头分别提供不同板块线索，但它们不是收益暗示。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '先看小区，再看房子',
+      body: '看到陌生代码时，先确认它属于哪个交易所和板块，再了解交易门槛、波动和风险提示。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '代码贴纸配对',
+      body: '把常见代码前缀拖到“主板、创业板、科创板、北交所”的地图区域。',
+    ),
+  ],
+  3: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '交易规则是新手安全带',
+      body: '交易时间、涨跌幅、买入后通常次日可卖等规则，先帮你避免按钮点错。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '快递不是 24 小时都揽收',
+      body: '市场也有工作时间。午间、收盘后和节假日不能按连续竞价逻辑理解。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '交易日时间轴',
+      body: '把“上午连续竞价、午休、下午连续竞价、收盘集合竞价”放到正确顺序。',
+    ),
+  ],
+  4: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '行情图是记录本，不是水晶球',
+      body: 'K 线记录开、高、低、收和成交信息，但单根形态不能替你做投资决策。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '像体温记录表',
+      body: '一天体温升高只能提示关注原因，不能单独诊断所有问题；价格图也一样。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '周期放大镜',
+      body: '滑动切换分时、日线、周线，观察短周期噪音和长周期轮廓的差异。',
+    ),
+  ],
+  5: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '股价高不等于估值贵',
+      body: '估值要把价格放回利润、资产、分红和成长质量里看，不能只看一个绝对数字。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '同样 100 元，买到的东西不同',
+      body: '一杯水 100 元很贵，一件耐穿外套 100 元可能合理；股票也要看背后的盈利和资产质量。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '估值天平',
+      body: '把“PE、PB、股息率”分别拖到“利润、净资产、现金分红”的秤盘上。',
+    ),
+  ],
+  6: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '看公司先看它怎么赚钱',
+      body: '业务、收入、利润、现金流和负债共同组成公司简历，热搜不能替代研究。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '像面试一家公司',
+      body: '先问它卖什么、客户是谁、钱有没有收回来，再看估值和风险。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '公司简历排序',
+      body: '将“主营业务、利润、现金流、负债、风险提示”排成新手研究顺序。',
+    ),
+  ],
+  7: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '风险来自市场、公司和情绪',
+      body: '市场大风、公司单点问题和自己的冲动，都会让收益路径变得不稳定。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '天气、路况和驾驶员',
+      body: '大盘波动像天气，公司风险像路况，情绪风险像驾驶员分心，工具要分别对应。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '风险工具配对',
+      body: '把“分散、现金缓冲、冷静期”匹配到不同风险来源。',
+    ),
+  ],
+  8: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '指数基金是一篮子规则',
+      body: '宽基指数把一组代表性资产装进透明篮子，优势是分散、规则清楚、费用通常较低。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '买水果篮，不押单个水果',
+      body: '单个水果可能坏掉，一篮子更能分散单点问题，但篮子本身仍会随市场波动。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '篮子宽窄判断',
+      body: '选择“宽基、行业、主题”三类篮子的风险集中程度。',
+    ),
+  ],
+  9: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '有些钱的任务是站岗',
+      body: '应急金和短期刚需资金优先安全和流动性，不应该承担过高波动。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '学费钱不能坐过山车',
+      body: '明年要交学费的钱，不适合放进高波动资产，因为它没有时间等修复。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '资金期限分层',
+      body: '把“随时用、1 年内用、5 年以上不用”的资金放到不同风险层。',
+    ),
+  ],
+  10: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '情绪正常，动作要慢',
+      body: '从众、FOMO 和损失厌恶都会出现，关键是用规则给冲动加延迟。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '朋友圈热闹不是买入理由',
+      body: '牛市刷屏会放大“我也要上车”的压力，但投资动作需要回到仓位和估值规则。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '暂停键演练',
+      body: '为“暴涨、暴跌、朋友推荐”三个场景选择冷静期、仓位上限或投资日志。',
+    ),
+  ],
+  11: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '定投是执行规则，不是保证盈利',
+      body: '它把“一次猜对时点”变成“长期按固定金额和频率执行”，前提是资金可承受。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '像每月固定存钱',
+      body: '收入稳定时设定小额自动计划，遇到波动先检查生活安全垫，而不是硬撑。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '计划可承受性检查',
+      body: '输入月结余区间后，选择不会挤压生活和应急金的定投档位。',
+    ),
+  ],
+  12: <_EducationBeat>[
+    _EducationBeat(
+      kind: '概念',
+      title: '组合让每类资产各司其职',
+      body: '现金管流动性，固收做稳定器，权益承担长期成长来源之一，比例由用途和期限决定。',
+    ),
+    _EducationBeat(
+      kind: '案例',
+      title: '把钱放进三层工具箱',
+      body: '三个月内要用的钱放上层随手拿，长期不用的钱才可能放到底层成长仓。',
+    ),
+    _EducationBeat(
+      kind: '互动',
+      title: '个人投资系统 v1.0',
+      body: '汇总前 11 章的定投计划、纪律清单、风险上限和资金分层，生成可保存的系统草稿。',
+    ),
+  ],
+};

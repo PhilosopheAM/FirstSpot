@@ -9,6 +9,7 @@
 /// Author: AI
 /// Email: 11911421@mail.sustech.edu.cn
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
 import '../domain/onboarding_models.dart';
@@ -34,8 +35,16 @@ class OnboardingProfileLiteStep extends StatefulWidget {
 class _OnboardingProfileLiteStepState extends State<OnboardingProfileLiteStep> {
   int _currentQuestionIndex = 0;
   final ScrollController _scrollController = ScrollController();
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   bool _isMyoTyping = false;
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -63,6 +72,7 @@ class _OnboardingProfileLiteStepState extends State<OnboardingProfileLiteStep> {
         onComplete();
       });
       _scrollToBottom();
+      _audioPlayer.play(AssetSource('audio/myo_hint_chirp_01.wav'));
     }
   }
 
@@ -77,7 +87,8 @@ class _OnboardingProfileLiteStepState extends State<OnboardingProfileLiteStep> {
         if (_currentQuestionIndex == 0) _currentQuestionIndex = 1;
       });
     });
-    // TODO: 播放 assets/audio/option_select_pop.mp3
+    // 播放 assets/audio/option_select_pop.mp3
+    _audioPlayer.play(AssetSource('audio/option_select_pop.mp3'));
   }
 
   void _updateSavings(SavingsRange range) {
@@ -91,7 +102,8 @@ class _OnboardingProfileLiteStepState extends State<OnboardingProfileLiteStep> {
         if (_currentQuestionIndex == 1) _currentQuestionIndex = 2;
       });
     });
-    // TODO: 播放 assets/audio/option_select_pop.mp3
+    // 播放 assets/audio/option_select_pop.mp3
+    _audioPlayer.play(AssetSource('audio/option_select_pop.mp3'));
   }
 
   void _updateVolatility(VolatilityFeeling feeling) {
@@ -105,7 +117,8 @@ class _OnboardingProfileLiteStepState extends State<OnboardingProfileLiteStep> {
         if (_currentQuestionIndex == 2) _currentQuestionIndex = 3;
       });
     });
-    // TODO: 播放 assets/audio/option_select_pop.mp3
+    // 播放 assets/audio/option_select_pop.mp3
+    _audioPlayer.play(AssetSource('audio/option_select_pop.mp3'));
   }
 
   void _undoQuestion(int targetIndex) {
