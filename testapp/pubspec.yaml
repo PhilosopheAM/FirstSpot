@@ -77,6 +77,7 @@ flutter:
     - assets/images/badges/
     - assets/images/guidance_cards/
     - assets/images/learning_guidance/
+    - assets/mock_data/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

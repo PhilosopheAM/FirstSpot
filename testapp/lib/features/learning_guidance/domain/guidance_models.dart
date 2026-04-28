@@ -1,8 +1,8 @@
-﻿// Last Updated: 2026-04-25
-// 最后更新: 2026-04-25
+﻿// Last Updated: 2026-04-29
+// 最后更新: 2026-04-29
 //
-// Module: Learning guidance models - immutable lesson, dialogue, and quiz structures
-// 模块: 投资者教育模型 - 章节、对话与练习题的不可变结构
+// Module: Learning guidance models - immutable lesson, dialogue, quiz, and collectible structures
+// 模块: 投资者教育模型 - 章节、对话、练习题与收藏品的不可变结构
 //
 // Dependencies: None
 // 依赖: 无
@@ -115,4 +115,32 @@ class GuidanceConceptOption {
   final String text;
   final String myoResponse;
   final Set<String> highlightedTerms;
+}
+
+enum GuidanceBadgeRewardTrigger {
+  firstChapterOneLearningComplete,
+  firstChapterOneQuizPass,
+  firstChapterSixLearningComplete,
+  firstConceptReviewAfterCompletion,
+  firstAllChaptersLearningComplete,
+}
+
+class GuidanceBadgeReward {
+  const GuidanceBadgeReward({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.trigger,
+    required this.triggerLabel,
+    required this.assetPath,
+    required this.designResourcePath,
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final GuidanceBadgeRewardTrigger trigger;
+  final String triggerLabel;
+  final String assetPath;
+  final String designResourcePath;
 }

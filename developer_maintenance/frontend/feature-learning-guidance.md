@@ -87,3 +87,11 @@ Navigator.of(context).push(
 - 2026-04-28: 接入 `myo_lay_face_smile.png` 作为 CH01 IPO 案例讲解开场登场图，素材归档在 `Design_Resource/UI_design_resource/characters/myo/` 并同步到 `testapp/assets/images/characters/myo/`；登场层高度约占屏幕 52%，底部对齐裁切后随字幕结束向下滑出。
 
 - 2026-04-28: 将 CH01 IPO 案例讲解从“点击向下箭头”改为“拖拽下一位参与方进入上一幕”的推进方式；每幕弹出后 Myo 会再次从底部滑入并顶出可长按拖拽的参与方卡片，拖拽时上一幕卡片边框脉冲高亮，放入成功后自动弹出下一幕并在完成后点亮案例步骤；同步更新 widget 测试为长按拖拽流程。
+
+- 2026-04-28: 新增 `guidance_rewards.dart` 与 `GuidanceReward`，为 12 章配置奖励内容、章末奖赏节点、XP、运行时替代 badge 和缺口 Myo 专属奖励图提示词；章节详情页在学习三步后展示奖励预告卡，并补充 `UX-Product-Design/guidance/17_12章节奖励节点与美术提示词.md` 与 `Design_Resource/UI_design_resource/guidance_rewards/README.md`。
+- 2026-04-29: 重构奖励规则为“章节完成获得卡片、5 个首次里程碑获得徽章”；新增 `guidance_user_progress.dart` 维护首次完成状态，`guidance_rewards.dart` 改为徽章里程碑数据，章节详情奖励预告改为章节卡片预告。
+
+### 2026-04-29 补充维护说明
+
+- `testapp/lib/features/learning_guidance/data/guidance_rewards.dart`: 当前只维护 5 个首次里程碑徽章，不再维护 12 章逐章徽章或 XP 表。
+- `testapp/lib/features/learning_guidance/data/guidance_user_progress.dart`: 用户收藏状态源，通过 `SharedPreferences` 持久化章节学习完成、小测通过和已获得徽章集合，负责章节卡片、首次学习徽章、首次小测徽章、半程徽章、概念复习徽章和全章完成徽章的去重发放。

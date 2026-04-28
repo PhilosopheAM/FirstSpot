@@ -13,7 +13,7 @@
 | `testapp/lib/features/onboarding/pages/first_open_gate_page.dart` | 首开分流页，读取本地偏好决定进入引导或首页 |
 | `testapp/lib/features/onboarding/pages/onboarding_flow_page.dart` | 首开引导流程容器，串联 welcome/profile/lesson/starter/reward |
 | `testapp/lib/features/onboarding/pages/home_dashboard_page.dart` | 引导完成后的首页仪表盘，含个股信息入口、学习课程入口、底部金库入口和 debug 重置 |
-| `testapp/lib/features/onboarding/pages/vault_page.dart` | 金库页面，展示用户当前已获得的概念卡并支持左右滑动浏览 |
+| `testapp/lib/features/onboarding/pages/vault_page.dart` | 金库页面，展示用户当前已获得的章节卡片和成就徽章，底部可切换“卡片 / 徽章”并支持左右滑动浏览 |
 | `testapp/lib/features/onboarding/data/onboarding_preferences_service.dart` | `SharedPreferences` 封装，记录首开完成状态与 Myo 彩蛋状态 |
 | `testapp/lib/features/onboarding/domain/onboarding_models.dart` | 首开画像枚举和 `OnboardingProfileAnswers` |
 | `testapp/lib/features/onboarding/widgets/bouncy_button.dart` | 统一弹性按钮组件 |
@@ -71,7 +71,7 @@
 - 依赖 `audioplayers`：Welcome 点击声、mini lesson 音效反馈、以及首开各个步骤（Profile, Starter Plan, Reward Reveal）的音效反馈。
 - 依赖 `fl_chart`：mini lesson 第 2 关趋势图。
 - 依赖 Flutter `Overlay`：通过 `xp_flyup.dart` 在界面右上角展示非阻塞 XP 飞行动效。
-- 依赖 `features/learning_guidance/data/guidance_lessons.dart`：金库读取当前已获得概念卡的展示数据，V1 首开完成后默认展示 `CARD-01`。
+- 依赖 `features/learning_guidance/data/guidance_user_progress.dart`：金库读取当前已获得章节卡片与成就徽章状态。
 - 依赖 `features/learning_guidance/pages/guidance_learning_page.dart`：首页“继续新手村课程”入口。
 - 依赖 `features/stock_insight/pages/stock_insight_template_page.dart`：首页个股信息入口。
 - 被 `testapp/lib/main.dart` 通过 `FirstOpenGatePage` 挂载。
@@ -93,14 +93,14 @@ FirstOpenGatePage
 
 - “了解你的第一只关注个股”卡片进入 `StockInsightTemplatePage`。
 - “继续新手村课程”卡片进入 `GuidanceLearningPage`。
-- 底部正中间显示 `🏛️` + `金库` 按钮，点击进入 `VaultPage` 查看当前已获得卡片。
+- 底部正中间显示 `🏛️` + `金库` 按钮，点击进入 `VaultPage` 查看当前已获得卡片和徽章。
 - AppBar 右侧保留 `重置首开(Debug)`，用于本地开发清空 `SharedPreferences` 并回到首开分流。
 
 ## Vault page
 
-- 首开完成后默认解锁 `CARD-01 · 市场门口的第一步`。
-- 金库使用 `PageView` 展示已获得卡片，顺序为最早获得在最左，最新获得在最右。
-- 滑到数组边界时使用 clamping physics，卡片不会离开屏幕。
+- 章节学习完成后解锁对应章节主视觉卡片；徽章只由学习引导的首次里程碑状态发放。
+- 金库底部提供“卡片 / 徽章”切换，两类收藏品都使用 `PageView` 展示，顺序为最早获得在最左，最新获得在最右。
+- 滑到数组边界时使用 clamping physics，卡片和徽章不会离开屏幕。
 - 左上角返回按钮回到首页。
 
 ## Welcome step
@@ -147,6 +147,7 @@ FirstOpenGatePage
 ## 变更日志
 
 - 2026-04-25: 文档对齐本轮重构，补齐关键文件、对外接口、依赖关系和所有主要 onboarding 变更记录。
+- 2026-04-29: 金库从单一概念卡列表改为“卡片 / 徽章”双收藏展示；卡片和徽章共用左右滑动逻辑，数据改由持久化的 `GuidanceUserProgress` 提供。
 - 2026-04-25: 修复首页底部 `🏛️ 金库` 按钮在部分视口/emoji 字体下的 `RenderFlex` 底部溢出；图标改为固定高度 `FittedBox`，文字压低行高。
 - 2026-04-25: 首页底部新增 `🏛️ 金库` 操作入口；新增 `VaultPage`，用于浏览已获得概念卡，当前首开完成后默认展示 `CARD-01`。
 - 2026-04-25: Reward Reveal 中 `CARD-01` 获得后进入悬浮态，卡片在空中轻微上下浮动，直到用户点击屏幕收下卡片。

@@ -1,5 +1,5 @@
-/// Last Updated: 2026-04-20
-/// 最后更新: 2026-04-20
+/// Last Updated: 2026-04-29
+/// 最后更新: 2026-04-29
 ///
 /// Module: Reusable stock insight page wired to data middle-layer service.
 /// 模块: 连接数据中间层服务的可复用个股信息页面。
@@ -23,7 +23,7 @@ import '../widgets/price_fluctuation_chart_v2.dart';
 class StockInsightTemplatePage extends StatefulWidget {
   const StockInsightTemplatePage({
     super.key,
-    this.ticker = 'SFI.US',
+    this.ticker = '600519', // Default to Moutai
     this.dataService,
   });
 
@@ -35,9 +35,6 @@ class StockInsightTemplatePage extends StatefulWidget {
 }
 
 class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
-  final PageController _infoPageController = PageController();
-  int _currentInfoIndex = 0;
-
   late final StockInsightDataService _dataService = widget.dataService ??
       const StockInsightDataService(
         backendApi: MockStockInsightBackendApi(),
@@ -46,11 +43,8 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
     ticker: widget.ticker,
   );
 
-  @override
-  void dispose() {
-    _infoPageController.dispose();
-    super.dispose();
-  }
+  bool _showTicker = false;
+  String _selectedTimeFrame = '1M';
 
   @override
   Widget build(BuildContext context) {
@@ -62,14 +56,14 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
       ) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(
-            backgroundColor: Color(0xFFF4F7F5),
-            body: Center(child: CircularProgressIndicator()),
+            backgroundColor: Colors.white,
+            body: Center(child: CircularProgressIndicator(color: Color(0xFF1ACC4D))),
           );
         }
 
         if (snapshot.hasError || !snapshot.hasData) {
           return Scaffold(
-            backgroundColor: const Color(0xFFF4F7F5),
+            backgroundColor: Colors.white,
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -88,37 +82,34 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
             .map((PricePoint point) => FlSpot(point.x, point.y))
             .toList(growable: false);
 
-        final double maxHeaderHeight = MediaQuery.of(context).size.height * 0.48;
+        // Calculate latest price and change
+        final double latestPrice = data.dayLineSeries.last.y;
+        final double prevPrice = data.dayLineSeries.length > 1 
+            ? data.dayLineSeries[data.dayLineSeries.length - 2].y 
+            : latestPrice;
+        final double change = latestPrice - prevPrice;
+        final double changePercent = (change / prevPrice) * 100;
+        final bool isPositive = change >= 0;
+        final Color changeColor = isPositive ? const Color(0xFF1ACC4D) : const Color(0xFFE53333);
+        final String sign = isPositive ? '+' : '';
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF4F7F5),
+          backgroundColor: Colors.white,
           body: SafeArea(
             child: CustomScrollView(
               slivers: <Widget>[
-                SliverPersistentHeader(
-                  pinned: false,
-                  delegate: _CollapsibleHeaderDelegate(
-                    minExtentValue: 0,
-                    maxExtentValue: maxHeaderHeight,
-                    child: PriceFluctuationChartV2(
-                      securityNameCn: data.profile.securityNameCn,
-                      securityNameEn: data.profile.securityNameEn,
-                      ticker: data.profile.ticker,
-                      spots: chartSpots,
-                      subtitle: '数据来源：FirstSpot 数据中间层服务',
-                    ),
-                  ),
-                ),
+                _buildTopBar(data.profile),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 6, 12, 18),
-                    child: Column(
-                      children: <Widget>[
-                        _buildCompanyInfoSlider(data.companyCategories),
-                        const SizedBox(height: 12),
-                        _buildAiGlossaryPanel(data.glossaryItems),
-                      ],
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      _buildHeroArea(latestPrice, change, changePercent, sign, changeColor, chartSpots),
+                      _buildStatsGrid(),
+                      _buildAnalystRatings(),
+                      _buildFinancialHealth(),
+                      _buildAboutCompany(data.profile),
+                      _buildMyoCompanion(),
+                    ],
                   ),
                 ),
               ],
@@ -129,256 +120,483 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
     );
   }
 
-  Widget _buildCompanyInfoSlider(List<CompanyInfoCategory> categories) {
-    final List<CompanyInfoCategory> safeCategories = categories.isEmpty
-        ? const <CompanyInfoCategory>[
-            CompanyInfoCategory(title: '暂无信息', content: '当前未获取到公司信息分类数据。'),
-          ]
-        : categories;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text(
-            '公司信息滑窗',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A2026),
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 150,
-            child: PageView.builder(
-              controller: _infoPageController,
-              itemCount: safeCategories.length,
-              onPageChanged: (int index) {
+  Widget _buildTopBar(SecurityProfile profile) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            const Icon(Icons.arrow_back, size: 24, color: Colors.black),
+            GestureDetector(
+              onTap: () {
                 setState(() {
-                  _currentInfoIndex = index;
+                  _showTicker = !_showTicker;
                 });
               },
-              itemBuilder: (BuildContext context, int index) {
-                final CompanyInfoCategory item = safeCategories[index];
-                return Container(
-                  margin: const EdgeInsets.only(right: 4),
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7FAF8),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0x16000000)),
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    _showTicker ? profile.ticker : profile.securityNameCn,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        item.title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1F2A33),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        item.content,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          height: 1.4,
-                          color: Color(0xFF55616A),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    profile.securityNameEn,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      color: Color(0xFF808080),
+                    ),
                   ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List<Widget>.generate(safeCategories.length, (int index) {
-              final bool active = index == _currentInfoIndex;
-              return AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                height: 6,
-                width: active ? 20 : 6,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: active ? const Color(0xFF1FA95B) : const Color(0x332B343B),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAiGlossaryPanel(List<GlossaryItem> items) {
-    final List<GlossaryItem> safeItems = items.isEmpty
-        ? const <GlossaryItem>[
-            GlossaryItem(
-              term: '暂无词汇',
-              explanation: '当前未返回专业词汇解释数据。',
-              whyItMatters: '可在中间层接入 AI 解释服务后返回对应数据。',
-            ),
-          ]
-        : items;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text(
-            'AI 专业词汇解释',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1A2026),
-            ),
-          ),
-          const SizedBox(height: 10),
-          ...safeItems.map((GlossaryItem item) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _GlossaryCard(
-                term: item.term,
-                explanation: item.explanation,
-                whyItMatters: item.whyItMatters,
+                ],
               ),
-            );
-          }),
-        ],
+            ),
+            const Icon(Icons.star_border, size: 24, color: Colors.black),
+          ],
+        ),
       ),
     );
   }
-}
 
-/// Header delegate to collapse the upper chart area to zero.
-/// 将上半屏图表区域折叠到零高度的 Header 委托。
-class _CollapsibleHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _CollapsibleHeaderDelegate({
-    required this.minExtentValue,
-    required this.maxExtentValue,
-    required this.child,
-  });
-
-  final double minExtentValue;
-  final double maxExtentValue;
-  final Widget child;
-
-  @override
-  double get minExtent => minExtentValue;
-
-  @override
-  double get maxExtent => max(maxExtentValue, minExtentValue);
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return SizedBox.expand(child: child);
-  }
-
-  @override
-  bool shouldRebuild(covariant _CollapsibleHeaderDelegate oldDelegate) {
-    return oldDelegate.minExtentValue != minExtentValue ||
-        oldDelegate.maxExtentValue != maxExtentValue ||
-        oldDelegate.child != child;
-  }
-}
-
-/// Card for AI glossary explanation.
-/// AI 术语解释卡片。
-class _GlossaryCard extends StatelessWidget {
-  const _GlossaryCard({
-    required this.term,
-    required this.explanation,
-    required this.whyItMatters,
-  });
-
-  final String term;
-  final String explanation;
-  final String whyItMatters;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6FAF7),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x17000000)),
-      ),
+  Widget _buildHeroArea(double price, double change, double changePercent, String sign, Color changeColor, List<FlSpot> spots) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Text(
-            term,
+            '¥${price.toStringAsFixed(2)}',
             style: const TextStyle(
-              fontSize: 14,
+              fontFamily: 'Inter',
+              fontSize: 40,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1F2B35),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            explanation,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.35,
-              color: Color(0xFF516069),
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '为什么重要',
+          Text(
+            '$sign¥${change.toStringAsFixed(2)} ($sign${changePercent.toStringAsFixed(2)}%)',
             style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF239157),
+              fontFamily: 'Inter',
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: changeColor,
             ),
           ),
-          const SizedBox(height: 3),
-          Text(
-            whyItMatters,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.35,
-              color: Color(0xFF4A5A64),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 180,
+            width: double.infinity,
+            child: LineChart(
+              LineChartData(
+                lineTouchData: const LineTouchData(enabled: false),
+                gridData: const FlGridData(show: false),
+                titlesData: const FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                lineBarsData: <LineChartBarData>[
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    curveSmoothness: 0.35,
+                    preventCurveOverShooting: true,
+                    color: changeColor,
+                    barWidth: 2,
+                    isStrokeCapRound: true,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        colors: <Color>[
+                          changeColor.withOpacity(0.2),
+                          changeColor.withOpacity(0.0),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <String>['1D', '1W', '1M', '3M', '1Y', 'ALL'].map((String time) {
+              final bool isSelected = time == _selectedTimeFrame;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedTimeFrame = time;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFFE5F2E5) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    time,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: isSelected ? const Color(0xFF1A9933) : const Color(0xFF808080),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(child: _buildStatCard('Market Cap', '2.07T', '')),
+              const SizedBox(width: 16),
+              Expanded(child: _buildStatCard('P/E Ratio', '27.8', 'Reasonable')),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: <Widget>[
+              Expanded(child: _buildStatCard('Div Yield', '2.84%', '')),
+              const SizedBox(width: 16),
+              Expanded(child: _buildStatCard('52W Range', '¥1400 - 1750', 'Near High')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, String subtitle) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F5FA),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Color(0xFF666666),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.black,
+            ),
+          ),
+          if (subtitle.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10,
+                color: Color(0xFF999999),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnalystRatings() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            'Analyst Ratings',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0x1A1ACC4D),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  '92%',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1ACC4D),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Column(
+                children: <Widget>[
+                  _buildRatingBar('Buy', 0.92, const Color(0xFF1ACC4D)),
+                  const SizedBox(height: 8),
+                  _buildRatingBar('Hold', 0.08, const Color(0xFF999999)),
+                  const SizedBox(height: 8),
+                  _buildRatingBar('Sell', 0.00, const Color(0xFFE53333)),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingBar(String label, double percentage, Color color) {
+    return Row(
+      children: <Widget>[
+        SizedBox(
+          width: 40,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Color(0xFF666666),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: 120,
+          height: 8,
+          decoration: BoxDecoration(
+            color: const Color(0xFFE6E6E6),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: max(0.01, percentage),
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          '${(percentage * 100).round()}%',
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFinancialHealth() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            'Financial Health',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: <Widget>[
+              _buildQuarterChart('Q1', 100, 20),
+              _buildQuarterChart('Q2', 110, 25),
+              _buildQuarterChart('Q3', 105, 22),
+              _buildQuarterChart('Q4', 120, 30),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: <Widget>[
+              _buildLegendItem('Revenue (Earned)', const Color(0xFFCCD9F2)),
+              const SizedBox(width: 16),
+              _buildLegendItem('Net Income (Kept)', const Color(0xFF3366E5)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuarterChart(String label, double revHeight, double profHeight) {
+    return Column(
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: <Widget>[
+            Container(
+              width: 16,
+              height: revHeight,
+              decoration: BoxDecoration(
+                color: const Color(0xFFCCD9F2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Container(
+              width: 16,
+              height: profHeight,
+              decoration: BoxDecoration(
+                color: const Color(0xFF3366E5),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF808080),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      children: <Widget>[
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF666666),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAboutCompany(SecurityProfile profile) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'About ${profile.securityNameCn}',
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            '贵州茅台酒股份有限公司主要业务是茅台酒及系列酒的生产与销售。主导产品“贵州茅台酒”是世界三大蒸馏名酒之一，也是集绿色食品、有机食品、地理标志产品于一体的中国白酒品牌。',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              height: 1.4,
+              color: Color(0xFF4D4D4D),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              _buildTag('# 白酒'),
+              const SizedBox(width: 8),
+              _buildTag('# 消费品'),
+              const SizedBox(width: 8),
+              _buildTag('# 核心资产'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTag(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F0F5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontFamily: 'Inter',
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF333333),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMyoCompanion() {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      padding: const EdgeInsets.only(bottom: 40),
+      child: Image.asset(
+        'assets/images/characters/myo/myo_lay_face_smile.png',
+        fit: BoxFit.contain,
       ),
     );
   }

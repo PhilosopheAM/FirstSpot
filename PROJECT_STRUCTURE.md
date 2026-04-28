@@ -48,7 +48,7 @@ datafetcher/
 testapp/
 ├── lib/                      # Dart 源代码（应用主体）
 │   └── features/             #   按业务模块切分
-│       ├── learning_guidance/ #     投资者教育 12 章课程、题库与 Myo 练习反馈
+│       ├── learning_guidance/ #     投资者教育 12 章课程、题库、Myo 练习反馈与收藏状态
 │       ├── onboarding/       #     首开引导与首页
 │       └── stock_insight/    #     个股信息页
 ├── test/                     # Flutter 测试
@@ -71,7 +71,9 @@ UX-Product-Design/
 ├── V1/                       # 版本 V1 设计资料
 │   ├── Scratch_List/         #   各界面的草图 / 交互草案 markdown
 │   ├── first-open-onboarding.md            # V1 首开引导结构层（页面列表 / 元素清单）
-│   └── Gamified_Onboarding_Design.md       # V1 游戏化设计（Duolingo-style，面向 Z 世代 16-28）
+│   ├── Gamified_Onboarding_Design.md       # V1 游戏化设计（Duolingo-style，面向 Z 世代 16-28）
+│   ├── stock-detail-page-design.md         # V1 个股/基金详情页极简 UX 设计文档
+│   └── finance-micro-widgets-figma-prototype.md # V1 金融小组件 Figma 原型入口、节点与交互维护文档
 └── guidance/                 # 投资者教育学习框架（12 章 + 总览）
     ├── 00_学习框架总览.md     #   索引与收藏卡片系统总览
     ├── 01_什么是二级市场.md
@@ -89,7 +91,8 @@ UX-Product-Design/
     ├── 13_12章练习交互细化与素材清单.md #   12 章 Myo 对话、题库审计与素材提示词
     ├── 14_先教育再小测学习闭环与素材补全记录.md # V1.2 学习闭环与素材缺口维护记录
     ├── 15_12章概念聊天对话与首章实装.md # 12 章概念路径图方法论、50 轮上限与全章概念聊天脚本记录
-    └── 16_12章概念对话文本与术语维护稿.md # 12 章概念对话文本稿与专业术语独立维护板块
+    ├── 16_12章概念对话文本与术语维护稿.md # 12 章概念对话文本稿与专业术语独立维护板块
+    └── 17_12章节奖励节点与美术提示词.md # 12 章奖励节点、奖励内容与 Myo 专属徽章缺口提示词
 ```
 
 职责：产品设计文档、用户流程、交互草案、版本迭代记录。新版本开 `V2/`、`V3/` 子目录。
@@ -102,6 +105,7 @@ Design_Resource/
 ├── UI_design_resource/       # UI 美术资源
 │   ├── guidance_cards/       #   投资者教育 12 章线条风格主视觉与预览拼图
 │   ├── learning_guidance/    #   投资者教育章末练习背景图、通过页与重练页插画
+│   ├── guidance_rewards/     #   投资者教育收藏奖励规则与历史素材提示词归档
 │   └── reference/            #   创意参考图 / 灵感板
 └── Sound_design_resource/    # 音效 / 音频资源
     ├── guidance_*.wav        # 投资者教育学习闭环实装音效
@@ -217,3 +221,7 @@ developer_maintenance/
 - 2026-04-28: 新增 `Reading_Material/投资者教育App_游戏化交互设计原则与方法.md`，沉淀投资者教育 App 游戏化交互设计的体系化原则与方法笔记。
 
 - 2026-04-28: 将 CH01 IPO 案例讲解从“点击向下箭头”改为“拖拽下一位参与方进入上一幕”的推进方式；每幕弹出后 Myo 会再次从底部滑入并顶出可长按拖拽的参与方卡片，拖拽时上一幕卡片边框脉冲高亮，放入成功后自动弹出下一幕并在完成后点亮案例步骤；同步更新 widget 测试为长按拖拽流程。
+- 2026-04-28: 新增 `UX-Product-Design/guidance/17_12章节奖励节点与美术提示词.md`、`Design_Resource/UI_design_resource/guidance_rewards/README.md` 和 `guidance_rewards.dart`，为 12 章投资者教育配置奖励内容、奖赏节点、XP、替代 badge 与 Myo 专属奖励图生成提示词。
+- 2026-04-29: 重构投资者教育收藏奖励为“章节完成得卡片、5 个首次里程碑得徽章”；新增 `guidance_user_progress.dart` 通过本地偏好维护首次状态，金库新增“卡片 / 徽章”底部切换并共用滑动展示逻辑。
+- 2026-04-28: 新增 `UX-Product-Design/V1/stock-detail-page-design.md`，定义了面向小白用户的极简个股/基金详情页 UX 设计（包含价格走势、核心统计卡片、分析师评级仪表盘、财务柱状图等）。
+- 2026-04-29: 新增 `UX-Product-Design/V1/finance-micro-widgets-figma-prototype.md`，记录金融小组件 Figma 原型链接、文件 Key、可播放节点、组件术语与下次继续编辑步骤。

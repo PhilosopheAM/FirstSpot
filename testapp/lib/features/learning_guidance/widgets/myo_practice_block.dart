@@ -18,9 +18,10 @@ import 'package:flutter/material.dart';
 import '../domain/guidance_models.dart';
 
 class MyoPracticeBlock extends StatefulWidget {
-  const MyoPracticeBlock({super.key, required this.lesson});
+  const MyoPracticeBlock({super.key, required this.lesson, this.onPassed});
 
   final GuidanceLesson lesson;
+  final VoidCallback? onPassed;
 
   @override
   State<MyoPracticeBlock> createState() => _MyoPracticeBlockState();
@@ -312,12 +313,16 @@ class _MyoPracticeBlockState extends State<MyoPracticeBlock> {
         onTap: () {
           final bool passedBefore =
               _isComplete && _correctCount >= _practicePassScore;
-              
+
           if (_answers[question.id] != option.id) {
             final bool isCorrect = option.id == question.correctOptionId;
-            unawaited(_playAudio(isCorrect 
-                ? 'audio/quiz_correct_soft_chime_01.wav' 
-                : 'audio/quiz_retry_warm_pop_01.wav'));
+            unawaited(
+              _playAudio(
+                isCorrect
+                    ? 'audio/quiz_correct_soft_chime_01.wav'
+                    : 'audio/quiz_retry_warm_pop_01.wav',
+              ),
+            );
           }
 
           setState(() {
@@ -375,7 +380,7 @@ class _MyoPracticeBlockState extends State<MyoPracticeBlock> {
           ? '${question.correctFeedback}\n${question.explanation}'
           : '${question.repairFeedback}\n${question.explanation}',
       accent: isCorrect,
-      avatarAsset: isCorrect 
+      avatarAsset: isCorrect
           ? '$_learningGuidanceAssetBase/myo_quiz_correct_micro.png'
           : '$_learningGuidanceAssetBase/myo_quiz_retry_micro.png',
     );
@@ -388,6 +393,7 @@ class _MyoPracticeBlockState extends State<MyoPracticeBlock> {
     }
 
     _hasPlayedPassReward = true;
+    widget.onPassed?.call();
     final String assetPath = widget.lesson.chapterNumber == 12
         ? 'audio/guidance_finale_12_cards.wav'
         : 'audio/guidance_passport_stamp.wav';
@@ -403,16 +409,16 @@ class _MyoPracticeBlockState extends State<MyoPracticeBlock> {
     }
   }
 
-  Widget _buildMyoBubble(String text, {bool accent = false, String? avatarAsset}) {
+  Widget _buildMyoBubble(
+    String text, {
+    bool accent = false,
+    String? avatarAsset,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         if (avatarAsset != null)
-          Image.asset(
-            avatarAsset,
-            width: 38,
-            height: 38,
-          )
+          Image.asset(avatarAsset, width: 38, height: 38)
         else
           Container(
             width: 38,
@@ -422,7 +428,9 @@ class _MyoPracticeBlockState extends State<MyoPracticeBlock> {
               color: accent ? const Color(0xFFFFF9F0) : const Color(0xFFE8F5E9),
               shape: BoxShape.circle,
               border: Border.all(
-                color: accent ? const Color(0xFFFFB547) : const Color(0xFFD7E8DD),
+                color: accent
+                    ? const Color(0xFFFFB547)
+                    : const Color(0xFFD7E8DD),
                 width: 2,
               ),
             ),

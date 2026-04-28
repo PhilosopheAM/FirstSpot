@@ -1,13 +1,22 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:testapp/features/learning_guidance/data/guidance_concept_dialogues.dart';
 import 'package:testapp/features/learning_guidance/data/guidance_lessons.dart';
+import 'package:testapp/features/learning_guidance/data/guidance_rewards.dart';
+import 'package:testapp/features/learning_guidance/data/guidance_user_progress.dart';
 import 'package:testapp/features/learning_guidance/domain/guidance_models.dart';
 import 'package:testapp/features/learning_guidance/pages/guidance_learning_page.dart';
+import 'package:testapp/features/onboarding/pages/vault_page.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    guidanceUserProgress.resetForTesting();
+  });
+
   testWidgets('Guidance learning page renders all 12 chapters', (
     WidgetTester tester,
   ) async {
@@ -36,6 +45,87 @@ void main() {
     }
   });
 
+  test('Guidance collectibles split chapter cards from milestone badges', () {
+    expect(guidanceLessons, hasLength(12));
+    expect(guidanceBadgeRewards, hasLength(5));
+
+    expect(
+      guidanceBadgeRewards.map(
+        (GuidanceBadgeReward reward) => reward.assetPath,
+      ),
+      containsAll(<String>[
+        'assets/images/badges/achievement_learning_onboarding_start_round_bunny.png',
+        'assets/images/badges/achievement_practice_drill_master_card_hamster.png',
+        'assets/images/badges/achievement_progress_halfway_card_turtle.png',
+        'assets/images/badges/achievement_review_recap_master_card_panda.png',
+        'assets/images/badges/achievement_level_scholar_max_card_lion.png',
+      ]),
+    );
+    for (final GuidanceLesson lesson in guidanceLessons) {
+      expect(lesson.heroAsset, startsWith('assets/images/guidance_cards/'));
+    }
+  });
+
+  test('Guidance user progress grants cards and first-time badges once', () {
+    final GuidanceLesson chapterOne = guidanceLessons.first;
+    final GuidanceLesson chapterSix = guidanceLessons[5];
+
+    expect(guidanceUserProgress.earnedCards, isEmpty);
+    expect(guidanceUserProgress.earnedBadges, isEmpty);
+
+    expect(
+      guidanceUserProgress.markLessonLearningCompleted(chapterOne),
+      isTrue,
+    );
+    expect(
+      guidanceUserProgress.markLessonLearningCompleted(chapterOne),
+      isFalse,
+    );
+    expect(guidanceUserProgress.earnedCards, contains(chapterOne));
+    expect(
+      guidanceUserProgress.hasEarnedBadge('learning_onboarding_start'),
+      isTrue,
+    );
+
+    expect(guidanceUserProgress.markQuizPassed(chapterOne), isTrue);
+    expect(guidanceUserProgress.markQuizPassed(chapterOne), isFalse);
+    expect(
+      guidanceUserProgress.hasEarnedBadge('practice_drill_master'),
+      isTrue,
+    );
+
+    guidanceUserProgress.markLessonLearningCompleted(chapterSix);
+    expect(guidanceUserProgress.hasEarnedBadge('progress_halfway'), isTrue);
+
+    guidanceUserProgress.markConceptReviewOpenedAfterCompletion();
+    expect(guidanceUserProgress.hasEarnedBadge('review_recap_master'), isTrue);
+
+    for (final GuidanceLesson lesson in guidanceLessons) {
+      guidanceUserProgress.markLessonLearningCompleted(lesson);
+    }
+    expect(guidanceUserProgress.earnedCards, hasLength(12));
+    expect(guidanceUserProgress.hasEarnedBadge('level_scholar_max'), isTrue);
+  });
+
+  testWidgets('Vault page switches between card and badge collections', (
+    WidgetTester tester,
+  ) async {
+    guidanceUserProgress.markLessonLearningCompleted(guidanceLessons.first);
+    guidanceUserProgress.markQuizPassed(guidanceLessons.first);
+
+    await tester.pumpWidget(const MaterialApp(home: VaultPage()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('卡片'), findsOneWidget);
+    expect(find.text('徽章'), findsOneWidget);
+    expect(find.textContaining('CARD-01'), findsWidgets);
+
+    await tester.tap(find.text('徽章'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('小测通关徽章'), findsOneWidget);
+  });
+
   testWidgets('Chapter one concept card opens Myo chat from saved progress', (
     WidgetTester tester,
   ) async {
@@ -49,6 +139,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('进入概念对话'));
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('第 1 章 · 概念对话'), findsOneWidget);
     expect(find.textContaining('Myo 先拆开一个常见误会'), findsOneWidget);
@@ -107,10 +198,7 @@ void main() {
     await tester.pumpAndSettle();
     await _completeChapterOneConceptChat(tester);
 
-    for (int i = 0; i < 2; i += 1) {
-      await tester.tap(find.text('点一下，完成这步').first);
-      await tester.pumpAndSettle();
-    }
+    await _completeChapterOneCaseAndInteraction(tester);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
@@ -142,10 +230,7 @@ void main() {
     await tester.pumpAndSettle();
     await _completeChapterOneConceptChat(tester);
 
-    for (int i = 0; i < 2; i += 1) {
-      await tester.tap(find.text('点一下，完成这步').first);
-      await tester.pumpAndSettle();
-    }
+    await _completeChapterOneCaseAndInteraction(tester);
 
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
@@ -172,10 +257,7 @@ void main() {
     await tester.pumpAndSettle();
     await _completeChapterOneConceptChat(tester);
 
-    for (int i = 0; i < 2; i += 1) {
-      await tester.tap(find.text('点一下，完成这步').first);
-      await tester.pumpAndSettle();
-    }
+    await _completeChapterOneCaseAndInteraction(tester);
 
     await tester.scrollUntilVisible(find.text('章末通行证小测'), 260);
     expect(find.text('章末通行证小测'), findsOneWidget);
@@ -241,6 +323,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('进入概念对话'));
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.text('二级市场').first);
     await tester.pumpAndSettle();
 
@@ -281,6 +364,7 @@ Future<void> _completeChapterOneConceptChat(
 }) async {
   await tester.tap(find.text('进入概念对话'));
   await tester.pumpAndSettle();
+  await tester.pump(const Duration(seconds: 1));
 
   for (final String optionText in <String>[
     '所以更像二手转让？',
@@ -291,16 +375,56 @@ Future<void> _completeChapterOneConceptChat(
     '价格是在买卖拉扯中形成的。',
     '我能总结为“投资者之间转让”。',
   ]) {
-    await tester.tap(find.text(optionText));
+    final Finder option = find.text(optionText);
+    for (int i = 0; i < 8 && option.evaluate().isEmpty; i += 1) {
+      await tester.pump(const Duration(seconds: 1));
+    }
+    await tester.ensureVisible(option);
+    await tester.pump();
+    await tester.tap(option);
     await tester.pump(const Duration(seconds: 4));
     await tester.pump();
   }
 
-  expect(find.textContaining('太棒了，你已经了解了第 1 章'), findsOneWidget);
+  final Finder completePraise = find.textContaining('太棒了，你已经了解了第 1 章');
+  await tester.scrollUntilVisible(
+    completePraise,
+    260,
+    scrollable: find.byType(Scrollable).last,
+  );
+  expect(completePraise, findsOneWidget);
   if (closeAfterComplete) {
     await tester.tap(find.text('返回章节'));
     await tester.pumpAndSettle();
   }
+}
+
+Future<void> _completeChapterOneCaseAndInteraction(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.text('进入案例讲解'),
+    260,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(find.text('进入案例讲解'));
+  await tester.pumpAndSettle();
+
+  await tester.pump(const Duration(milliseconds: 1800));
+  await tester.pumpAndSettle();
+
+  for (int i = 1; i < 6; i += 1) {
+    await _dragCaseParticipant(
+      tester,
+      dragCardIndex: i,
+      dropTargetIndex: i - 1,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  await tester.tap(find.text('返回章节'));
+  await tester.pumpAndSettle();
+
+  await tester.tap(find.byIcon(Icons.touch_app_rounded).first);
+  await tester.pumpAndSettle();
 }
 
 Future<void> _dragCaseParticipant(

@@ -45,7 +45,7 @@ testapp/lib/
 | 应用入口 & 首开分流 | `lib/main.dart` + `features/onboarding/pages/first_open_gate_page.dart` | `app-entry.md` |
 | 首开引导 | `features/onboarding/` | `feature-onboarding.md` |
 | 投资者教育课程 | `features/learning_guidance/` | `feature-learning-guidance.md` |
-| 个股信息页 | `features/stock_insight/` | `feature-stock-insight.md` |
+| 个股信息页 | `features/stock_insight/` | `feature-stock-insight.md` (内含 [Figma 原型链接](https://www.figma.com/design/Jb5m5oWDmydGzAOcqeRAB4)) |
 
 ## 新增 feature 的流程
 
@@ -59,3 +59,4 @@ testapp/lib/
 
 - 2026-04-20: 初始化文档；当前两个 feature：onboarding、stock_insight。
 - 2026-04-25: 新增 `learning_guidance` feature，用于承载 12 章投资者教育课程、题库与 Myo 反馈练习。
+- 2026-04-29: 在 `stock_insight` feature 的文档条目中补充了 Figma 原型链接。

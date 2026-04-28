@@ -1,15 +1,18 @@
-/// Last Updated: 2026-04-20
-/// 最后更新: 2026-04-20
+/// Last Updated: 2026-04-29
+/// 最后更新: 2026-04-29
 ///
 /// Module: Stock insight data middle layer adapter with backend contract.
 /// 模块: 个股信息数据中间层适配器（含后端服务交互协议）。
 ///
-/// Dependencies: dart:math, stock_insight_models
-/// 依赖: dart:math, stock_insight_models
+/// Dependencies: dart:math, dart:convert, flutter/services.dart, stock_insight_models
+/// 依赖: dart:math, dart:convert, flutter/services.dart, stock_insight_models
 ///
 /// Author: Harry Chen
 /// Email: 11911421@mail.sustech.edu.cn
+import 'dart:convert';
 import 'dart:math';
+
+import 'package:flutter/services.dart';
 
 import '../domain/stock_insight_models.dart';
 
@@ -52,6 +55,10 @@ class MockStockInsightBackendApi implements StockInsightBackendApi {
     // 模拟网络与中间层数据处理耗时。
     await Future<void>.delayed(const Duration(milliseconds: 380));
 
+    if (ticker == '600519') {
+      return _loadMoutaiData();
+    }
+
     final int seed = ticker.hashCode.abs();
     final Random random = Random(seed);
 
@@ -86,6 +93,52 @@ class MockStockInsightBackendApi implements StockInsightBackendApi {
         ),
       ],
     );
+  }
+
+  Future<StockInsightViewData> _loadMoutaiData() async {
+    try {
+      final String jsonString = await rootBundle.loadString('assets/mock_data/600519_daily.json');
+      final Map<String, dynamic> jsonMap = json.decode(jsonString) as Map<String, dynamic>;
+      final List<dynamic> dataList = jsonMap['data'] as List<dynamic>;
+      
+      final List<PricePoint> series = dataList.map((dynamic item) {
+        final Map<String, dynamic> map = item as Map<String, dynamic>;
+        final DateTime date = DateTime.parse(map['date'] as String);
+        return PricePoint(
+          x: date.millisecondsSinceEpoch.toDouble(),
+          y: (map['close'] as num).toDouble(),
+        );
+      }).toList();
+
+      return StockInsightViewData(
+        profile: const SecurityProfile(
+          securityNameCn: '贵州茅台',
+          securityNameEn: 'Kweichow Moutai',
+          ticker: '600519',
+        ),
+        dayLineSeries: series,
+        companyCategories: const <CompanyInfoCategory>[
+          CompanyInfoCategory(
+            title: '主营业务',
+            content: '茅台酒及系列酒的生产与销售。主导产品“贵州茅台酒”是世界三大蒸馏名酒之一。',
+          ),
+        ],
+        glossaryItems: const <GlossaryItem>[],
+      );
+    } catch (e) {
+      // Fallback if file not found
+      final Random random = Random(600519);
+      return StockInsightViewData(
+        profile: const SecurityProfile(
+          securityNameCn: '贵州茅台',
+          securityNameEn: 'Kweichow Moutai',
+          ticker: '600519',
+        ),
+        dayLineSeries: _buildMockDayLineSeries(random),
+        companyCategories: const <CompanyInfoCategory>[],
+        glossaryItems: const <GlossaryItem>[],
+      );
+    }
   }
 
   List<PricePoint> _buildMockDayLineSeries(Random random) {

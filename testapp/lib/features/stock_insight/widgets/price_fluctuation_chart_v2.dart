@@ -356,6 +356,7 @@ class _PriceFluctuationChartV2State extends State<PriceFluctuationChartV2> {
                               spots: chartData.visibleSpots,
                               isCurved: true,
                               curveSmoothness: 0.32,
+                              preventCurveOverShooting: true,
                               color: const Color(0xFF1FA95B),
                               barWidth: 3.2,
                               isStrokeCapRound: true,

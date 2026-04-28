@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import '../data/guidance_concept_dialogues.dart';
 import '../data/guidance_glossary.dart';
 import '../data/guidance_lessons.dart';
+import '../data/guidance_user_progress.dart';
 import '../domain/guidance_models.dart';
 import '../widgets/finance_term_text.dart';
 import '../widgets/myo_practice_block.dart';
@@ -60,6 +61,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   @override
   void initState() {
     super.initState();
+    unawaited(guidanceUserProgress.load());
     _conceptChatController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 420),
@@ -1395,6 +1397,8 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         const SizedBox(height: 18),
         _buildLearningJourney(lesson),
         const SizedBox(height: 16),
+        _buildChapterCardRewardPlan(lesson),
+        const SizedBox(height: 16),
         _buildSection(lesson, '学完我们能回答', lesson.learningGoals, 'learning_goal'),
         const SizedBox(height: 16),
         _buildSection(lesson, '这一章记住三件事', lesson.keyPoints, 'key_point'),
@@ -1402,7 +1406,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         if (learningComplete) ...<Widget>[
           _buildRewardGate(lesson),
           const SizedBox(height: 12),
-          MyoPracticeBlock(lesson: lesson),
+          MyoPracticeBlock(
+            lesson: lesson,
+            onPassed: () => guidanceUserProgress.markQuizPassed(lesson),
+          ),
         ] else
           _buildLockedQuizNotice(lesson),
       ],
@@ -1703,6 +1710,77 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     );
   }
 
+  Widget _buildChapterCardRewardPlan(GuidanceLesson lesson) {
+    final bool learningComplete = _isLessonLearningComplete(lesson);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FCFF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFCFEFFF), width: 2),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              lesson.heroAsset,
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    _buildTinyPill('章节卡片'),
+                    const SizedBox(width: 8),
+                    _buildTinyPill(
+                      'CARD-${lesson.chapterNumber.toString().padLeft(2, '0')}',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  lesson.cardName,
+                  style: const TextStyle(
+                    color: Color(0xFF162025),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '完成本章学习后收获这张章节主视觉卡片，卡片与徽章会分开展示在金库中。',
+                  style: const TextStyle(
+                    color: Color(0xFF45616F),
+                    height: 1.4,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  learningComplete ? '已收获：卡片已进入金库。' : '收获节点：完成上方 3 个学习步骤。',
+                  style: TextStyle(
+                    color: learningComplete
+                        ? const Color(0xFF1FA95B)
+                        : const Color(0xFFB45309),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRewardGate(GuidanceLesson lesson) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1778,6 +1856,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     final int stepCount =
         (_educationBeats[lesson.chapterNumber] ?? _fallbackBeats).length;
     return (_completedLearningSteps[lesson.id]?.length ?? 0) >= stepCount;
+  }
+
+  void _markLessonLearningCompleted(GuidanceLesson lesson) {
+    guidanceUserProgress.markLessonLearningCompleted(lesson);
   }
 
   bool _isLessonUnlocked(GuidanceLesson lesson) {
@@ -1859,6 +1941,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     }
 
     if (!wasLessonComplete && _isLessonLearningComplete(lesson)) {
+      _markLessonLearningCompleted(lesson);
       unawaited(_playGuidanceAudio(_GuidanceAudio.nextUnlock));
     }
   }
@@ -2212,6 +2295,9 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     final int selectedCount =
         _conceptDialogueSelections[lesson.id]?.length ?? 0;
     final bool shouldRevealFirstPrompt = dialogue != null && selectedCount == 0;
+    if (dialogue != null && selectedCount >= dialogue.turns.length) {
+      guidanceUserProgress.markConceptReviewOpenedAfterCompletion();
+    }
     setState(() {
       _activeConceptLesson = lesson;
       _conceptTypingKey = shouldRevealFirstPrompt
@@ -2336,6 +2422,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     if (isDialogueComplete &&
         !wasLessonComplete &&
         _isLessonLearningComplete(lesson)) {
+      _markLessonLearningCompleted(lesson);
       unawaited(_playGuidanceAudio(_GuidanceAudio.nextUnlock));
     }
   }
@@ -2359,6 +2446,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     }
 
     if (!wasLessonComplete && _isLessonLearningComplete(lesson)) {
+      _markLessonLearningCompleted(lesson);
       unawaited(_playGuidanceAudio(_GuidanceAudio.nextUnlock));
       return;
     }
