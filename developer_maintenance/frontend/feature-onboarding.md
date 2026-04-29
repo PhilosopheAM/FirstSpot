@@ -12,7 +12,7 @@
 |---|---|
 | `testapp/lib/features/onboarding/pages/first_open_gate_page.dart` | 首开分流页，读取本地偏好决定进入引导或首页 |
 | `testapp/lib/features/onboarding/pages/onboarding_flow_page.dart` | 首开引导流程容器，串联 welcome/profile/lesson/starter/reward |
-| `testapp/lib/features/onboarding/pages/home_dashboard_page.dart` | 引导完成后的首页仪表盘，含个股信息入口、学习课程入口、底部金库入口和 debug 重置 |
+| `testapp/lib/features/onboarding/pages/home_dashboard_page.dart` | 引导完成后的首页仪表盘，含个股信息入口、学习课程入口、底部工具 / 金库入口和 debug 重置 |
 | `testapp/lib/features/onboarding/pages/vault_page.dart` | 金库页面，展示用户当前已获得的章节卡片和成就徽章，底部可切换“卡片 / 徽章”并支持左右滑动浏览 |
 | `testapp/lib/features/onboarding/data/onboarding_preferences_service.dart` | `SharedPreferences` 封装，记录首开完成状态与 Myo 彩蛋状态 |
 | `testapp/lib/features/onboarding/domain/onboarding_models.dart` | 首开画像枚举和 `OnboardingProfileAnswers` |
@@ -74,6 +74,7 @@
 - 依赖 `features/learning_guidance/data/guidance_user_progress.dart`：金库读取当前已获得章节卡片与成就徽章状态。
 - 依赖 `features/learning_guidance/pages/guidance_learning_page.dart`：首页“继续新手村课程”入口。
 - 依赖 `features/stock_insight/pages/stock_insight_template_page.dart`：首页个股信息入口。
+- 依赖 `features/finance_micro_widgets/pages/effective_holding_cost_page.dart` 与 `features/finance_micro_widgets/pages/compound_daily_gain_page.dart`：首页底部“工具”抽屉的两个独立页面入口。
 - 被 `testapp/lib/main.dart` 通过 `FirstOpenGatePage` 挂载。
 
 ## 当前流程
@@ -93,7 +94,7 @@ FirstOpenGatePage
 
 - “了解你的第一只关注个股”卡片进入 `StockInsightTemplatePage`。
 - “继续新手村课程”卡片进入 `GuidanceLearningPage`。
-- 底部正中间显示 `🏛️` + `金库` 按钮，点击进入 `VaultPage` 查看当前已获得卡片和徽章。
+- 底部显示 `🧮 工具` 与 `🏛️ 金库` 并列入口；工具按钮弹出底部抽屉，分别进入 `EffectiveHoldingCostPage` 或 `CompoundDailyGainPage`，金库进入 `VaultPage` 查看当前已获得卡片和徽章。
 - AppBar 右侧保留 `重置首开(Debug)`，用于本地开发清空 `SharedPreferences` 并回到首开分流。
 
 ## Vault page
@@ -146,6 +147,7 @@ FirstOpenGatePage
 
 ## 变更日志
 
+- 2026-04-29: 首页底部 `🧮 小工具` 改名为 `🧮 工具`，点击后打开抽屉式工具选择器，分别进入基金持有成本和复利日均收益独立页面。
 - 2026-04-25: 文档对齐本轮重构，补齐关键文件、对外接口、依赖关系和所有主要 onboarding 变更记录。
 - 2026-04-29: 金库从单一概念卡列表改为“卡片 / 徽章”双收藏展示；卡片和徽章共用左右滑动逻辑，数据改由持久化的 `GuidanceUserProgress` 提供。
 - 2026-04-25: 修复首页底部 `🏛️ 金库` 按钮在部分视口/emoji 字体下的 `RenderFlex` 底部溢出；图标改为固定高度 `FittedBox`，文字压低行高。

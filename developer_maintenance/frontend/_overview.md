@@ -20,6 +20,10 @@ testapp/lib/
     │   ├── widgets/                #   仅本 feature 使用的组件
     │   ├── domain/                 #   领域模型、枚举
     │   └── data/                   #   偏好存储 / 持久化
+    ├── finance_micro_widgets/      # 金融计算小组件
+    │   ├── pages/                  #   持有成本 / 复利收益独立页面
+    │   ├── widgets/                #   持有成本 / 复利收益独立小组件
+    │   └── domain/                 #   成本与复利公式模型
     └── stock_insight/              # 个股信息页
         ├── pages/
         ├── widgets/
@@ -44,6 +48,9 @@ testapp/lib/
 |---|---|---|
 | 应用入口 & 首开分流 | `lib/main.dart` + `features/onboarding/pages/first_open_gate_page.dart` | `app-entry.md` |
 | 首开引导 | `features/onboarding/` | `feature-onboarding.md` |
+| 金融小组件入口 | `features/finance_micro_widgets/` | `feature-finance-micro-widgets.md` |
+| 基金真实持有成本估算器 | `features/finance_micro_widgets/widgets/effective_holding_cost_widget.dart` | `feature-finance-holding-cost-widget.md` |
+| 复利日均收益模拟器 | `features/finance_micro_widgets/widgets/compound_daily_gain_widget.dart` | `feature-finance-compound-daily-gain-widget.md` |
 | 投资者教育课程 | `features/learning_guidance/` | `feature-learning-guidance.md` |
 | 个股信息页 | `features/stock_insight/` | `feature-stock-insight.md` (内含 [Figma 原型链接](https://www.figma.com/design/Jb5m5oWDmydGzAOcqeRAB4)) |
 
@@ -60,3 +67,5 @@ testapp/lib/
 - 2026-04-20: 初始化文档；当前两个 feature：onboarding、stock_insight。
 - 2026-04-25: 新增 `learning_guidance` feature，用于承载 12 章投资者教育课程、题库与 Myo 反馈练习。
 - 2026-04-29: 在 `stock_insight` feature 的文档条目中补充了 Figma 原型链接。
+- 2026-04-29: 新增 `finance_micro_widgets` feature，登记金融小组件入口、持有成本估算器和复利日均收益模拟器维护文档。
+- 2026-04-29: `finance_micro_widgets` 从双组件总览页改为两个独立工具页，由首页底部“工具”抽屉进入。

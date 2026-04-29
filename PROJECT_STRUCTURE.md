@@ -48,6 +48,10 @@ datafetcher/
 testapp/
 ├── lib/                      # Dart 源代码（应用主体）
 │   └── features/             #   按业务模块切分
+│       ├── finance_micro_widgets/ # 金融工具：持有成本估算器与复利收益模拟器
+│       │   ├── pages/        #     两个工具的独立页面入口
+│       │   ├── widgets/      #     两个工具的独立交互组件
+│       │   └── domain/       #     持有成本与复利收益公式模型
 │       ├── learning_guidance/ #     投资者教育 12 章课程、题库、Myo 练习反馈与收藏状态
 │       ├── onboarding/       #     首开引导与首页
 │       └── stock_insight/    #     个股信息页
@@ -141,6 +145,9 @@ developer_maintenance/
 └── frontend/                 # 前端功能文档（按 feature 划分）
     ├── _overview.md
     ├── app-entry.md
+    ├── feature-finance-compound-daily-gain-widget.md
+    ├── feature-finance-holding-cost-widget.md
+    ├── feature-finance-micro-widgets.md
     ├── feature-learning-guidance.md
     ├── feature-onboarding.md
     └── feature-stock-insight.md
@@ -225,3 +232,5 @@ developer_maintenance/
 - 2026-04-29: 重构投资者教育收藏奖励为“章节完成得卡片、5 个首次里程碑得徽章”；新增 `guidance_user_progress.dart` 通过本地偏好维护首次状态，金库新增“卡片 / 徽章”底部切换并共用滑动展示逻辑。
 - 2026-04-28: 新增 `UX-Product-Design/V1/stock-detail-page-design.md`，定义了面向小白用户的极简个股/基金详情页 UX 设计（包含价格走势、核心统计卡片、分析师评级仪表盘、财务柱状图等）。
 - 2026-04-29: 新增 `UX-Product-Design/V1/finance-micro-widgets-figma-prototype.md`，记录金融小组件 Figma 原型链接、文件 Key、可播放节点、组件术语与下次继续编辑步骤。
+- 2026-04-29: 新增 `testapp/lib/features/finance_micro_widgets/` 金融小组件 feature，并新增对应入口与两个组件级维护文档。
+- 2026-04-29: `finance_micro_widgets` 移除双组件总览页，新增 `effective_holding_cost_page.dart` 与 `compound_daily_gain_page.dart` 两个独立工具页面。

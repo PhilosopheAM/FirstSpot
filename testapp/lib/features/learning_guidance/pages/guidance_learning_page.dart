@@ -1,5 +1,5 @@
-// Last Updated: 2026-04-28
-// 最后更新: 2026-04-28
+// Last Updated: 2026-04-29
+// 最后更新: 2026-04-29
 //
 // Module: Guidance learning page - 12 chapter investor education path
 // 模块: 投资者教育学习页 - 12 章新手学习路径
@@ -11,6 +11,8 @@
 // Email: 11911421@mail.sustech.edu.cn
 
 import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
@@ -33,10 +35,14 @@ class GuidanceLearningPage extends StatefulWidget {
 class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     with TickerProviderStateMixin {
   static const Duration _conceptMyoThinkingDelay = Duration(milliseconds: 800);
+  static const Duration _lockedLessonPulseDuration = Duration(
+    milliseconds: 700,
+  );
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   late final AnimationController _conceptChatController;
   late final AnimationController _caseDropPulseController;
+  late final AnimationController _lockedLessonPulseController;
   final ScrollController _conceptChatScrollController = ScrollController();
   final ScrollController _caseScrollController = ScrollController();
 
@@ -55,6 +61,8 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   final Map<String, int> _conceptAdvancedTurnCounts = <String, int>{};
   String? _conceptTypingKey;
   int _conceptRevealToken = 0;
+  String? _lockedLessonPulseId;
+  int _lockedLessonPulseToken = 0;
   late final Map<String, _TermFirstOccurrence> _firstTermOccurrences =
       _buildFirstTermOccurrences();
 
@@ -71,6 +79,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
       vsync: this,
       duration: const Duration(milliseconds: 720),
     );
+    _lockedLessonPulseController = AnimationController(
+      vsync: this,
+      duration: _lockedLessonPulseDuration,
+    );
     unawaited(_configureAudioPlayer());
   }
 
@@ -78,6 +90,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   void dispose() {
     _conceptChatController.dispose();
     _caseDropPulseController.dispose();
+    _lockedLessonPulseController.dispose();
     _conceptChatScrollController.dispose();
     _caseScrollController.dispose();
     _audioPlayer.dispose();
@@ -125,6 +138,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
               ),
             ),
       body: SafeArea(
+        bottom: !isCaseOpen,
         child: isCaseOpen
             ? _buildCaseRoute(activeCaseLesson)
             : isConceptChatOpen
@@ -162,148 +176,131 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         !isComplete;
     return Container(
       color: const Color(0xFFF7FAF8),
-      child: Stack(
+      child: Column(
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(6, 4, 16, 8),
-                child: Row(
-                  children: <Widget>[
-                    IconButton(
-                      tooltip: '返回章节学习',
-                      icon: const Icon(Icons.arrow_back_rounded),
-                      onPressed: _closeCaseRoute,
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          const Text(
-                            '案例 · IPO 股份旅程',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Color(0xFF162025),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            lesson.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF5D696F),
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    _buildTinyPill(
-                      '$revealedCount / ${_ipoCaseSegments.length}',
-                    ),
-                  ],
+          Padding(
+            padding: const EdgeInsets.fromLTRB(6, 4, 16, 8),
+            child: Row(
+              children: <Widget>[
+                IconButton(
+                  tooltip: '返回章节学习',
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  onPressed: _closeCaseRoute,
                 ),
-              ),
-              Expanded(
-                child: ListView(
-                  controller: _caseScrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 34),
-                  children: <Widget>[
-                    const SizedBox(height: 44),
-                    for (int i = 0; i < revealedCount; i += 1) ...<Widget>[
-                      _buildCaseSegment(
-                        lesson,
-                        _ipoCaseSegments[i],
-                        i,
-                        isDropTarget: hasDropPrompt && i == revealedCount - 1,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text(
+                        '案例 · IPO 股份旅程',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Color(0xFF162025),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                      const SizedBox(height: 12),
+                      Text(
+                        lesson.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF5D696F),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ],
-                    if (isComplete) _buildCaseCompleteCard(lesson),
-                    if (hasDropPrompt) const SizedBox(height: 220),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                _buildTinyPill('$revealedCount / ${_ipoCaseSegments.length}'),
+              ],
+            ),
           ),
-          Positioned(
-            top: 8,
-            left: 20,
-            right: 20,
-            child: IgnorePointer(
-              child: AnimatedOpacity(
-                opacity: _caseIntroVisible ? 1 : 0,
-                duration: const Duration(milliseconds: 240),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
+          Expanded(
+            child: ListView(
+              controller: _caseScrollController,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 18),
+              children: <Widget>[
+                if (_caseIntroVisible) ...<Widget>[
+                  const SizedBox(height: 18),
+                  _buildCaseIntroBubble(),
+                ],
+                for (int i = 0; i < revealedCount; i += 1) ...<Widget>[
+                  _buildCaseSegment(
+                    lesson,
+                    _ipoCaseSegments[i],
+                    i,
+                    isDropTarget: hasDropPrompt && i == revealedCount - 1,
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE4F6FF),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFCFEFFF)),
-                    boxShadow: const <BoxShadow>[
-                      BoxShadow(
-                        color: Color(0x14000000),
-                        blurRadius: 16,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    'Myo：跟我从公司出发，看一份股份怎样来到散户手里。',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFF086A9D),
-                      height: 1.35,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
+                  const SizedBox(height: 12),
+                ],
+                if (hasDropPrompt) ...<Widget>[
+                  _buildCaseGuidePanel(lesson, revealedCount),
+                  const SizedBox(height: 12),
+                ],
+                if (isComplete) _buildCaseCompleteCard(lesson),
+              ],
+            ),
+          ),
+          _buildCaseMyoDock(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCaseIntroBubble() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE4F6FF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFCFEFFF)),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: const Text(
+        'Myo：跟我从公司出发，看一份股份怎样来到散户手里。',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Color(0xFF086A9D),
+          height: 1.35,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCaseMyoDock() {
+    return SizedBox(
+      height: 178,
+      width: double.infinity,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: <Widget>[
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/characters/myo/myo_lay_face_smile.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.bottomCenter,
             ),
           ),
           Positioned(
             left: 0,
             right: 0,
-            bottom: 18,
-            child: AnimatedSlide(
-              offset: _caseIntroVisible || hasDropPrompt
-                  ? Offset.zero
-                  : const Offset(0, 1.4),
-              duration: const Duration(milliseconds: 420),
-              curve: Curves.easeOutBack,
-              child: AnimatedOpacity(
-                opacity: _caseIntroVisible || hasDropPrompt ? 1 : 0,
-                duration: const Duration(milliseconds: 240),
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.52,
-                  width: double.infinity,
-                  child: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: <Widget>[
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: Image.asset(
-                            'assets/images/characters/myo/myo_lay_face_smile.png',
-                            fit: BoxFit.cover,
-                            alignment: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                      if (hasDropPrompt)
-                        Positioned(
-                          left: 24,
-                          right: 24,
-                          bottom: 122,
-                          child: _buildCaseGuidePanel(lesson, revealedCount),
-                        ),
-                    ],
-                  ),
+            bottom: 0,
+            child: Container(
+              height: 14,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: <Color>[Color(0x00F7FAF8), Color(0xFFF7FAF8)],
                 ),
               ),
             ),
@@ -484,7 +481,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         ),
         const SizedBox(height: 12),
         Center(
-          child: LongPressDraggable<String>(
+          child: Draggable<String>(
             data: nextSegment.participant,
             dragAnchorStrategy: pointerDragAnchorStrategy,
             onDragStarted: () {
@@ -1057,6 +1054,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   Widget _buildGlossaryEntry() {
     final List<GuidanceGlossaryTerm> unlockedTerms = _unlockedGlossaryTerms();
     return InkWell(
+      key: const ValueKey<String>('guidance_glossary_entry'),
       borderRadius: BorderRadius.circular(18),
       onTap: () => _showGlossarySheet(unlockedTerms),
       child: Container(
@@ -1261,12 +1259,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         borderRadius: BorderRadius.circular(18),
         onTap: () {
           if (!unlocked) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('先完成第 ${lesson.chapterNumber - 1} 章学习内容，再进入这一章。'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            _pulseLockedLesson(lesson);
             return;
           }
           unawaited(_playGuidanceAudio(_GuidanceAudio.conceptReveal));
@@ -1341,14 +1334,62 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
                   ],
                 ),
               ),
-              Icon(
-                unlocked ? Icons.chevron_right_rounded : Icons.lock_rounded,
-                color: const Color(0xFFB0B9C0),
-              ),
+              _buildLessonTrailingIcon(lesson, unlocked),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildLessonTrailingIcon(GuidanceLesson lesson, bool unlocked) {
+    if (unlocked) {
+      return const Icon(Icons.chevron_right_rounded, color: Color(0xFFB0B9C0));
+    }
+
+    final bool isPulsing = _lockedLessonPulseId == lesson.id;
+    return AnimatedBuilder(
+      animation: _lockedLessonPulseController,
+      builder: (BuildContext context, Widget? child) {
+        final double breath = isPulsing
+            ? math.sin(_lockedLessonPulseController.value * math.pi)
+            : 0;
+        final Color iconColor =
+            Color.lerp(
+              const Color(0xFFB0B9C0),
+              const Color(0xFFE24B4B),
+              breath,
+            ) ??
+            const Color(0xFFB0B9C0);
+        return Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color.lerp(
+              Colors.transparent,
+              const Color(0xFFFFE1E1),
+              breath * 0.62,
+            ),
+            boxShadow: <BoxShadow>[
+              if (breath > 0)
+                BoxShadow(
+                  color: const Color(
+                    0xFFE24B4B,
+                  ).withValues(alpha: 0.28 * breath),
+                  blurRadius: 12 + 8 * breath,
+                  spreadRadius: 1 + 2 * breath,
+                ),
+            ],
+          ),
+          child: Icon(
+            Icons.lock_rounded,
+            key: ValueKey<String>('guidance_locked_icon_${lesson.id}'),
+            color: iconColor,
+          ),
+        );
+      },
     );
   }
 
@@ -1396,8 +1437,6 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
         _buildMyoIntro(lesson, lesson.myoIntro),
         const SizedBox(height: 18),
         _buildLearningJourney(lesson),
-        const SizedBox(height: 16),
-        _buildChapterCardRewardPlan(lesson),
         const SizedBox(height: 16),
         _buildSection(lesson, '学完我们能回答', lesson.learningGoals, 'learning_goal'),
         const SizedBox(height: 16),
@@ -1577,9 +1616,14 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     final bool isComplete = _isLearningStepComplete(lesson, index);
     final bool usesConceptChat = _usesConceptChat(lesson, index);
     final bool usesCasePresentation = _usesCasePresentation(lesson, index);
+    final bool usesMatchInteraction = _usesMatchInteraction(lesson, index);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: usesCasePresentation ? () => _openCasePresentation(lesson) : null,
+      onTap: usesCasePresentation
+          ? () => _openCasePresentation(lesson)
+          : usesMatchInteraction
+          ? () => _openMatchInteraction(lesson, index)
+          : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         margin: const EdgeInsets.only(bottom: 10),
@@ -1671,12 +1715,16 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
                     ? () => _openConceptChat(lesson)
                     : usesCasePresentation
                     ? () => _openCasePresentation(lesson)
+                    : usesMatchInteraction
+                    ? () => _openMatchInteraction(lesson, index)
                     : () => _toggleLearningStep(lesson, index),
                 icon: Icon(
                   usesConceptChat
                       ? Icons.chat_bubble_rounded
                       : usesCasePresentation
                       ? Icons.movie_filter_rounded
+                      : usesMatchInteraction
+                      ? Icons.compare_arrows_rounded
                       : isComplete
                       ? Icons.check_circle_rounded
                       : Icons.touch_app_rounded,
@@ -1689,6 +1737,10 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
                       ? isComplete
                             ? '复习案例讲解'
                             : '进入案例讲解'
+                      : usesMatchInteraction
+                      ? isComplete
+                            ? '复习互动匹配'
+                            : '进入互动匹配'
                       : isComplete
                       ? '已点亮'
                       : '点一下，完成这步',
@@ -1706,77 +1758,6 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildChapterCardRewardPlan(GuidanceLesson lesson) {
-    final bool learningComplete = _isLessonLearningComplete(lesson);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7FCFF),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFCFEFFF), width: 2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              lesson.heroAsset,
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    _buildTinyPill('章节卡片'),
-                    const SizedBox(width: 8),
-                    _buildTinyPill(
-                      'CARD-${lesson.chapterNumber.toString().padLeft(2, '0')}',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  lesson.cardName,
-                  style: const TextStyle(
-                    color: Color(0xFF162025),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '完成本章学习后收获这张章节主视觉卡片，卡片与徽章会分开展示在金库中。',
-                  style: const TextStyle(
-                    color: Color(0xFF45616F),
-                    height: 1.4,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  learningComplete ? '已收获：卡片已进入金库。' : '收获节点：完成上方 3 个学习步骤。',
-                  style: TextStyle(
-                    color: learningComplete
-                        ? const Color(0xFF1FA95B)
-                        : const Color(0xFFB45309),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1878,6 +1859,26 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
 
   bool _usesCasePresentation(GuidanceLesson lesson, int index) {
     return lesson.id == 'CH01' && index == 1;
+  }
+
+  bool _usesMatchInteraction(GuidanceLesson lesson, int index) {
+    return lesson.id == 'CH01' && index == 2;
+  }
+
+  Future<void> _openMatchInteraction(GuidanceLesson lesson, int index) async {
+    unawaited(_playGuidanceAudio(_GuidanceAudio.interactionReady));
+    final bool? completed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => _IpoMatchInteractionPage(
+          lesson: lesson,
+          isAlreadyComplete: _isLearningStepComplete(lesson, index),
+        ),
+      ),
+    );
+    if (!mounted || completed != true) {
+      return;
+    }
+    _completeMatchInteraction(lesson, index);
   }
 
   void _openCasePresentation(GuidanceLesson lesson) {
@@ -1988,6 +1989,7 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
       _caseGuideVisible = true;
       _isCaseDragging = false;
     });
+    _scrollCaseToBottom();
   }
 
   void _acceptCaseDrop(GuidanceLesson lesson, String participant) {
@@ -2456,6 +2458,43 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
     unawaited(_playGuidanceAudio(_audioForBeat(beats[index].kind)));
   }
 
+  void _pulseLockedLesson(GuidanceLesson lesson) {
+    _lockedLessonPulseToken += 1;
+    final int pulseToken = _lockedLessonPulseToken;
+    setState(() => _lockedLessonPulseId = lesson.id);
+    _lockedLessonPulseController.forward(from: 0);
+
+    Future<void>.delayed(_lockedLessonPulseDuration, () {
+      if (!mounted || pulseToken != _lockedLessonPulseToken) {
+        return;
+      }
+      setState(() => _lockedLessonPulseId = null);
+      _lockedLessonPulseController.reset();
+    });
+  }
+
+  void _completeMatchInteraction(GuidanceLesson lesson, int index) {
+    final bool wasLessonComplete = _isLessonLearningComplete(lesson);
+    final bool wasStepComplete = _isLearningStepComplete(lesson, index);
+
+    if (wasStepComplete) {
+      return;
+    }
+
+    setState(() {
+      final Set<int> completed = _completedLearningSteps.putIfAbsent(
+        lesson.id,
+        () => <int>{},
+      );
+      completed.add(index);
+    });
+
+    if (!wasLessonComplete && _isLessonLearningComplete(lesson)) {
+      _markLessonLearningCompleted(lesson);
+      unawaited(_playGuidanceAudio(_GuidanceAudio.nextUnlock));
+    }
+  }
+
   String _myoAssetForBeat(String kind) {
     switch (kind) {
       case '概念':
@@ -2527,6 +2566,758 @@ class _GuidanceLearningPageState extends State<GuidanceLearningPage>
   }
 }
 
+class _IpoMatchInteractionPage extends StatefulWidget {
+  const _IpoMatchInteractionPage({
+    required this.lesson,
+    required this.isAlreadyComplete,
+  });
+
+  final GuidanceLesson lesson;
+  final bool isAlreadyComplete;
+
+  @override
+  State<_IpoMatchInteractionPage> createState() =>
+      _IpoMatchInteractionPageState();
+}
+
+class _IpoMatchInteractionPageState extends State<_IpoMatchInteractionPage>
+    with TickerProviderStateMixin {
+  late final AnimationController _selectionBreathController;
+  late final AnimationController _matchFlashController;
+  late final AnimationController _celebrationController;
+  late final List<_InteractionConfettiPiece> _confettiPieces;
+  final Set<String> _matchedPairIds = <String>{};
+  final Set<String> _flashingPairIds = <String>{};
+  String? _selectedLeftId;
+  String? _wrongRightId;
+  int _wrongToken = 0;
+  bool _isComplete = false;
+  bool _showCelebration = false;
+  bool _celebrationPlayed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectionBreathController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1050),
+    );
+    _matchFlashController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 520),
+    );
+    _celebrationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2100),
+    );
+    _confettiPieces = _createInteractionConfettiPieces();
+    if (widget.isAlreadyComplete) {
+      _isComplete = true;
+      _matchedPairIds.addAll(
+        _ipoMatchPairs.map((_IpoMatchPair item) => item.id),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _selectionBreathController.dispose();
+    _matchFlashController.dispose();
+    _celebrationController.dispose();
+    super.dispose();
+  }
+
+  List<_InteractionConfettiPiece> _createInteractionConfettiPieces() {
+    final math.Random random = math.Random(17);
+    const List<Color> palette = <Color>[
+      Color(0xFF1FA95B),
+      Color(0xFF2F80ED),
+      Color(0xFFE38B29),
+      Color(0xFF8B5CF6),
+      Color(0xFFE0528D),
+      Color(0xFFFFD36A),
+    ];
+    return List<_InteractionConfettiPiece>.generate(86, (int index) {
+      final bool fromLeft = index.isEven;
+      return _InteractionConfettiPiece(
+        startX: fromLeft
+            ? -0.08 + random.nextDouble() * 0.26
+            : 0.82 + random.nextDouble() * 0.26,
+        peakXDrift: (fromLeft ? 1 : -1) * (110 + random.nextDouble() * 190),
+        peakHeightFactor: 0.10 + random.nextDouble() * 0.42,
+        delay: random.nextDouble() * 0.28,
+        size: 7 + random.nextDouble() * 13,
+        rotation: random.nextDouble() * math.pi,
+        spin:
+            (random.nextBool() ? 1 : -1) *
+            (math.pi * (1.5 + random.nextDouble() * 3.0)),
+        color: palette[index % palette.length],
+      );
+    });
+  }
+
+  void _selectLeft(_IpoMatchPair pair) {
+    if (_isComplete || _matchedPairIds.contains(pair.id)) {
+      return;
+    }
+    setState(() => _selectedLeftId = pair.id);
+    _selectionBreathController.repeat(reverse: true);
+  }
+
+  void _selectRight(_IpoMatchPair pair) {
+    final String? selectedLeftId = _selectedLeftId;
+    if (_isComplete ||
+        selectedLeftId == null ||
+        _matchedPairIds.contains(pair.id)) {
+      return;
+    }
+    if (selectedLeftId == pair.id) {
+      _confirmMatch(pair);
+      return;
+    }
+    _showWrongRight(pair.id);
+  }
+
+  void _confirmMatch(_IpoMatchPair pair) {
+    setState(() {
+      _matchedPairIds.add(pair.id);
+      _flashingPairIds.add(pair.id);
+      _selectedLeftId = null;
+      _wrongRightId = null;
+    });
+    _selectionBreathController
+      ..stop()
+      ..reset();
+    _matchFlashController
+      ..stop()
+      ..reset()
+      ..repeat(reverse: true);
+
+    Future<void>.delayed(const Duration(milliseconds: 1040), () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _flashingPairIds.remove(pair.id));
+      if (_flashingPairIds.isEmpty) {
+        _matchFlashController
+          ..stop()
+          ..reset();
+      }
+      if (_matchedPairIds.length == _ipoMatchPairs.length && !_isComplete) {
+        setState(() => _isComplete = true);
+        unawaited(_playCompletionCelebration());
+      }
+    });
+  }
+
+  Future<void> _playCompletionCelebration() async {
+    if (_celebrationPlayed) {
+      return;
+    }
+    _celebrationPlayed = true;
+    setState(() => _showCelebration = true);
+    try {
+      await _celebrationController.forward(from: 0);
+      await Future<void>.delayed(const Duration(milliseconds: 280));
+    } on TickerCanceled {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+    setState(() => _showCelebration = false);
+    _celebrationController.reset();
+  }
+
+  void _showWrongRight(String pairId) {
+    final int token = ++_wrongToken;
+    setState(() => _wrongRightId = pairId);
+    Future<void>.delayed(const Duration(milliseconds: 680), () {
+      if (!mounted || token != _wrongToken) {
+        return;
+      }
+      setState(() => _wrongRightId = null);
+    });
+  }
+
+  void _leavePage() {
+    Navigator.of(context).pop(_isComplete);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle captionStyle = TextStyle(
+      color: _isComplete ? const Color(0xFF1FA95B) : const Color(0xFF5D696F),
+      fontSize: 12,
+      fontWeight: FontWeight.w900,
+    );
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, bool? result) {
+        if (!didPop) {
+          _leavePage();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF7FAF8),
+        body: SafeArea(
+          child: Stack(
+            children: <Widget>[
+              Column(
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(6, 4, 16, 8),
+                    child: Row(
+                      children: <Widget>[
+                        IconButton(
+                          tooltip: '返回章节学习',
+                          icon: const Icon(Icons.arrow_back_rounded),
+                          onPressed: _leavePage,
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              const Text(
+                                '互动 · IPO 术语匹配',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: Color(0xFF162025),
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              Text(
+                                widget.lesson.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFF5D696F),
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _buildTinyPill(
+                          '${_matchedPairIds.length} / ${_ipoMatchPairs.length}',
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                      children: <Widget>[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _isComplete
+                                ? const Color(0xFFE8F5E9)
+                                : const Color(0xFFFFF9F0),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _isComplete
+                                  ? const Color(0xFF8ED8A6)
+                                  : const Color(0xFFFFE2A8),
+                            ),
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(
+                                _isComplete
+                                    ? Icons.check_circle_rounded
+                                    : Icons.compare_arrows_rounded,
+                                size: 18,
+                                color: _isComplete
+                                    ? const Color(0xFF1FA95B)
+                                    : const Color(0xFFB45309),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _isComplete
+                                      ? '互动已点亮：每组颜色代表一条正确关系。'
+                                      : '先点左侧专业词，再点右侧对应解释；颜色会替代连线保留匹配关系。',
+                                  style: captionStyle,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Expanded(
+                              child: Column(
+                                children: _ipoMatchPairs.map((
+                                  _IpoMatchPair pair,
+                                ) {
+                                  return _buildCard(
+                                    key: ValueKey<String>(
+                                      'ipo_match_left_${pair.id}',
+                                    ),
+                                    pair: pair,
+                                    text: pair.term,
+                                    sideLabel: '词汇',
+                                    isLeft: true,
+                                    onTap: () => _selectLeft(pair),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                children: _ipoMatchRightOrder.map((
+                                  _IpoMatchPair pair,
+                                ) {
+                                  return _buildCard(
+                                    key: ValueKey<String>(
+                                      'ipo_match_right_${pair.id}',
+                                    ),
+                                    pair: pair,
+                                    text: pair.meaning,
+                                    sideLabel: '作用',
+                                    isLeft: false,
+                                    onTap: () => _selectRight(pair),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_isComplete) ...<Widget>[
+                          const SizedBox(height: 8),
+                          ElevatedButton.icon(
+                            onPressed: _leavePage,
+                            icon: const Icon(Icons.arrow_back_rounded),
+                            label: const Text('返回章节'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1FA95B),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (_showCelebration)
+                _InteractionCompletionOverlay(
+                  controller: _celebrationController,
+                  pieces: _confettiPieces,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTinyPill(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Color(0xFF1FA95B),
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard({
+    required Key key,
+    required _IpoMatchPair pair,
+    required String text,
+    required String sideLabel,
+    required bool isLeft,
+    required VoidCallback onTap,
+  }) {
+    return AnimatedBuilder(
+      animation: Listenable.merge(<Listenable>[
+        _selectionBreathController,
+        _matchFlashController,
+      ]),
+      builder: (BuildContext context, Widget? child) {
+        final bool isMatched = _matchedPairIds.contains(pair.id);
+        final bool isSelected = isLeft && _selectedLeftId == pair.id;
+        final bool isWrong = !isLeft && _wrongRightId == pair.id;
+        final bool isFlashing = _flashingPairIds.contains(pair.id);
+        final double breath =
+            0.5 +
+            math.sin(_selectionBreathController.value * math.pi * 2) * 0.5;
+        final double flash = _matchFlashController.value;
+        final Color baseBorder = const Color(0xFFDDE7E1);
+        final Color borderColor = isWrong
+            ? const Color(0xFFE14949)
+            : isMatched || isSelected || isFlashing
+            ? pair.color
+            : baseBorder;
+        final double width = isFlashing
+            ? 2.1 + flash * 1.3
+            : isSelected
+            ? 2.2 + breath * 0.8
+            : isMatched
+            ? 2.4
+            : 1.2;
+        final Color shadowColor = isWrong
+            ? const Color(0x33E14949)
+            : isFlashing
+            ? pair.color.withValues(alpha: 0.20 + flash * 0.26)
+            : isSelected
+            ? pair.color.withValues(alpha: 0.18 + breath * 0.18)
+            : isMatched
+            ? pair.color.withValues(alpha: 0.16)
+            : const Color(0x08000000);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            key: key,
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(15),
+              onTap: _isComplete && isMatched ? null : onTap,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                constraints: const BoxConstraints(minHeight: 94),
+                padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+                decoration: BoxDecoration(
+                  color: isMatched
+                      ? pair.color.withValues(alpha: 0.08)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: borderColor, width: width),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: shadowColor,
+                      blurRadius: isSelected || isFlashing || isWrong ? 18 : 8,
+                      spreadRadius: isSelected || isFlashing ? 1 : 0,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: <Widget>[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Container(
+                                width: 9,
+                                height: 9,
+                                decoration: BoxDecoration(
+                                  color: isMatched || isSelected
+                                      ? pair.color
+                                      : const Color(0xFFCBD5CF),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                sideLabel,
+                                style: const TextStyle(
+                                  color: Color(0xFF8A9499),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (isMatched)
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 16,
+                                  color: pair.color,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            text,
+                            style: TextStyle(
+                              color: isMatched
+                                  ? const Color(0xFF162025)
+                                  : const Color(0xFF304348),
+                              height: 1.28,
+                              fontSize: isLeft ? 14 : 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      AnimatedOpacity(
+                        opacity: isWrong ? 1 : 0,
+                        duration: const Duration(milliseconds: 120),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: BackdropFilter(
+                            filter: ui.ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+                            child: Container(
+                              color: const Color(
+                                0xFFE14949,
+                              ).withValues(alpha: 0.16),
+                            ),
+                          ),
+                        ),
+                      ),
+                      AnimatedOpacity(
+                        opacity: isWrong ? 1 : 0,
+                        duration: const Duration(milliseconds: 120),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          size: 34,
+                          color: Color(0xFFE14949),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _InteractionCompletionOverlay extends StatelessWidget {
+  const _InteractionCompletionOverlay({
+    required this.controller,
+    required this.pieces,
+  });
+
+  final AnimationController controller;
+  final List<_InteractionConfettiPiece> pieces;
+
+  @override
+  Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.sizeOf(context);
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: controller,
+          builder: (BuildContext context, Widget? child) {
+            final double t = controller.value;
+            final double cardIn = Curves.easeOutBack.transform(
+              (t / 0.32).clamp(0.0, 1.0),
+            );
+            final double cardOut = Curves.easeInCubic.transform(
+              ((t - 0.76) / 0.24).clamp(0.0, 1.0),
+            );
+            return Stack(
+              children: <Widget>[
+                BackdropFilter(
+                  filter: ui.ImageFilter.blur(sigmaX: 7, sigmaY: 7),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.78),
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment.topCenter,
+                        radius: 1.12,
+                        colors: <Color>[
+                          const Color(0xFFFFF0B8).withValues(alpha: 0.50),
+                          const Color(0xFFE4F6FF).withValues(alpha: 0.30),
+                          Colors.white.withValues(alpha: 0.10),
+                        ],
+                        stops: const <double>[0, 0.54, 1],
+                      ),
+                    ),
+                  ),
+                ),
+                CustomPaint(
+                  size: Size.infinite,
+                  painter: _InteractionConfettiPainter(
+                    progress: t,
+                    pieces: pieces,
+                  ),
+                ),
+                Positioned(
+                  left: 28,
+                  right: 28,
+                  top: screenSize.height * 0.28,
+                  child: Opacity(
+                    opacity: (1 - cardOut).clamp(0.0, 1.0),
+                    child: Transform.translate(
+                      offset: Offset(0, 22 * (1 - cardIn) - 20 * cardOut),
+                      child: Transform.scale(
+                        scale: 0.86 + cardIn * 0.14,
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.86),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: const Color(0xFFFFD36A),
+                              width: 2,
+                            ),
+                            boxShadow: const <BoxShadow>[
+                              BoxShadow(
+                                color: Color(0x1A000000),
+                                blurRadius: 26,
+                                offset: Offset(0, 14),
+                              ),
+                            ],
+                          ),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(
+                                Icons.celebration_rounded,
+                                color: Color(0xFFE38B29),
+                                size: 34,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '匹配完成！',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFFB45309),
+                                  fontSize: 26,
+                                  height: 1.1,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'IPO 角色关系已经串起来了。',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFF5D696F),
+                                  height: 1.35,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _InteractionConfettiPainter extends CustomPainter {
+  const _InteractionConfettiPainter({
+    required this.progress,
+    required this.pieces,
+  });
+
+  final double progress;
+  final List<_InteractionConfettiPiece> pieces;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()..style = PaintingStyle.fill;
+    for (final _InteractionConfettiPiece piece in pieces) {
+      final double localT = ((progress - piece.delay) / (1 - piece.delay))
+          .clamp(0.0, 1.0);
+      if (localT <= 0) {
+        continue;
+      }
+
+      final double launchT = Curves.easeOutCubic.transform(
+        (localT / 0.50).clamp(0.0, 1.0),
+      );
+      final double fallT = Curves.easeIn.transform(
+        ((localT - 0.42) / 0.58).clamp(0.0, 1.0),
+      );
+      final double baseX = size.width * piece.startX;
+      final double x = baseX + piece.peakXDrift * launchT;
+      final double peakY = size.height * piece.peakHeightFactor;
+      final double y =
+          ui.lerpDouble(size.height + 26, peakY, launchT)! +
+          fallT * size.height * 0.24;
+      final double opacity =
+          1 - Curves.easeIn.transform(((localT - 0.78) / 0.22).clamp(0.0, 1.0));
+
+      paint.color = piece.color.withValues(alpha: opacity);
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(piece.rotation + piece.spin * localT);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: piece.size * 0.56,
+            height: piece.size,
+          ),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_InteractionConfettiPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.pieces != pieces;
+  }
+}
+
+class _InteractionConfettiPiece {
+  const _InteractionConfettiPiece({
+    required this.startX,
+    required this.peakXDrift,
+    required this.peakHeightFactor,
+    required this.delay,
+    required this.size,
+    required this.rotation,
+    required this.spin,
+    required this.color,
+  });
+
+  final double startX;
+  final double peakXDrift;
+  final double peakHeightFactor;
+  final double delay;
+  final double size;
+  final double rotation;
+  final double spin;
+  final Color color;
+}
+
 enum _GuidanceAudio {
   conceptReveal('audio/guidance_concept_reveal.wav'),
   caseSlide('audio/guidance_case_slide.wav'),
@@ -2575,6 +3366,61 @@ class _IpoCaseSegment {
   final String body;
   final Set<String> terms;
 }
+
+class _IpoMatchPair {
+  const _IpoMatchPair({
+    required this.id,
+    required this.term,
+    required this.meaning,
+    required this.color,
+  });
+
+  final String id;
+  final String term;
+  final String meaning;
+  final Color color;
+}
+
+const List<_IpoMatchPair> _ipoMatchPairs = <_IpoMatchPair>[
+  _IpoMatchPair(
+    id: 'issuer',
+    term: '发行方',
+    meaning: '把公司所有权切成股份，IPO 募资主要流向它。',
+    color: Color(0xFF1FA95B),
+  ),
+  _IpoMatchPair(
+    id: 'underwriter',
+    term: '承销商',
+    meaning: '像新股发行的组织者，协助定价、路演和销售。',
+    color: Color(0xFF2F80ED),
+  ),
+  _IpoMatchPair(
+    id: 'cornerstone',
+    term: '基石投资者',
+    meaning: '像发行价格的锚，给市场一个认购参考起点。',
+    color: Color(0xFFE38B29),
+  ),
+  _IpoMatchPair(
+    id: 'exchange',
+    term: '交易所',
+    meaning: '像有规则的入口，提供上市和二级市场交易场地。',
+    color: Color(0xFF8B5CF6),
+  ),
+  _IpoMatchPair(
+    id: 'retail',
+    term: '散户',
+    meaning: '通过打新申购，或上市后在二级市场买卖股票。',
+    color: Color(0xFFE0528D),
+  ),
+];
+
+final List<_IpoMatchPair> _ipoMatchRightOrder = <_IpoMatchPair>[
+  _ipoMatchPairs[2],
+  _ipoMatchPairs[4],
+  _ipoMatchPairs[1],
+  _ipoMatchPairs[3],
+  _ipoMatchPairs[0],
+];
 
 const List<_IpoCaseSegment> _ipoCaseSegments = <_IpoCaseSegment>[
   _IpoCaseSegment(

@@ -19,6 +19,9 @@ developer_maintenance/
 └── frontend/                 # 前端 (testapp) 功能文档
     ├── _overview.md          #   前端整体架构
     ├── app-entry.md          #   main.dart 与首开分流
+    ├── feature-finance-compound-daily-gain-widget.md # 复利日均收益模拟器
+    ├── feature-finance-holding-cost-widget.md # 基金真实持有成本估算器
+    ├── feature-finance-micro-widgets.md # 金融小组件入口
     ├── feature-learning-guidance.md # 投资者教育 12 章课程
     ├── feature-onboarding.md #   首开引导功能
     └── feature-stock-insight.md # 个股信息页功能
@@ -57,3 +60,4 @@ developer_maintenance/
 
 - 2026-04-20: 建立 `developer_maintenance/` 文档体系与配套规则。
 - 2026-04-25: 新增 `frontend/feature-learning-guidance.md`，登记投资者教育 12 章课程模块。
+- 2026-04-29: 新增金融小组件入口与两个组件级维护文档，登记持有成本估算器和复利日均收益模拟器。

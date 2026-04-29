@@ -88,4 +88,3 @@
 
 - **Figma 文件**：[FirstSpot - Stock Detail Page Prototype](https://www.figma.com/design/Jb5m5oWDmydGzAOcqeRAB4)
 - **说明**：原型已创建并包含 Top Bar 与 Hero Area（由于 Figma 免费版 API 限制，剩余部分可参考本文档在 Figma 中手动补全或升级后继续生成）。
-

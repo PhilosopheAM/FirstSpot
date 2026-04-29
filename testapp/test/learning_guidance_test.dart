@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -188,11 +187,18 @@ void main() {
     await tester.pump();
 
     await tester.tap(find.textContaining('认识沪深北交易所'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
 
     expect(find.text('新手村课程'), findsOneWidget);
-    expect(find.textContaining('先完成第 1 章学习内容'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 4));
+    expect(find.textContaining('先完成第 1 章学习内容'), findsNothing);
+    final Icon lockedIcon = tester.widget<Icon>(
+      find.byKey(
+        ValueKey<String>('guidance_locked_icon_${guidanceLessons[1].id}'),
+      ),
+    );
+    expect(lockedIcon.color, const Color(0xFFE24B4B));
+    await tester.pump(const Duration(milliseconds: 350));
 
     await tester.tap(find.textContaining('什么是二级市场'));
     await tester.pumpAndSettle();
@@ -218,7 +224,9 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: GuidanceLearningPage()));
     await tester.pump();
 
-    await tester.tap(find.text('词汇表'));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('guidance_glossary_entry')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.textContaining('先完成第 1 章的学习卡片'), findsOneWidget);
@@ -235,9 +243,14 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back_rounded));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(find.textContaining('已解锁'), -260);
     expect(find.textContaining('已解锁'), findsOneWidget);
 
-    await tester.tap(find.text('词汇表'));
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 180));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const ValueKey<String>('guidance_glossary_entry')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('二级市场'), findsWidgets);
@@ -262,6 +275,41 @@ void main() {
     await tester.scrollUntilVisible(find.text('章末通行证小测'), 260);
     expect(find.text('章末通行证小测'), findsOneWidget);
     expect(find.textContaining('你在二级市场买入'), findsOneWidget);
+  });
+
+  testWidgets('Leaving match interaction early does not save progress', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const MaterialApp(home: GuidanceLearningPage()));
+    await tester.pump();
+
+    await tester.tap(find.textContaining('什么是二级市场'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('进入互动匹配'),
+      260,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('进入互动匹配'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey<String>('ipo_match_left_issuer')),
+    );
+    await tester.pump(const Duration(milliseconds: 120));
+    await tester.tap(
+      find.byKey(const ValueKey<String>('ipo_match_right_issuer')),
+    );
+    await tester.pump(const Duration(milliseconds: 1200));
+
+    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    await tester.pumpAndSettle();
+
+    expect(find.text('进入互动匹配'), findsOneWidget);
+    expect(find.text('复习互动匹配'), findsNothing);
   });
 
   testWidgets('Chapter one case opens scrolling Myo IPO explanation', (
@@ -423,7 +471,55 @@ Future<void> _completeChapterOneCaseAndInteraction(WidgetTester tester) async {
   await tester.tap(find.text('返回章节'));
   await tester.pumpAndSettle();
 
-  await tester.tap(find.byIcon(Icons.touch_app_rounded).first);
+  await _completeChapterOneMatchInteraction(tester);
+}
+
+Future<void> _completeChapterOneMatchInteraction(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.text('进入互动匹配'),
+    260,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.tap(find.text('进入互动匹配'));
+  await tester.pumpAndSettle();
+
+  final Finder leftIssuer = find.byKey(
+    const ValueKey<String>('ipo_match_left_issuer'),
+  );
+  await tester.scrollUntilVisible(
+    leftIssuer,
+    260,
+    scrollable: find.byType(Scrollable).first,
+  );
+
+  for (final String id in <String>[
+    'issuer',
+    'underwriter',
+    'cornerstone',
+    'exchange',
+    'retail',
+  ]) {
+    final Finder leftCard = find.byKey(ValueKey<String>('ipo_match_left_$id'));
+    await tester.ensureVisible(leftCard);
+    await tester.pump();
+    await tester.tap(leftCard);
+    await tester.pump(const Duration(milliseconds: 120));
+
+    final Finder rightCard = find.byKey(
+      ValueKey<String>('ipo_match_right_$id'),
+    );
+    await tester.ensureVisible(rightCard);
+    await tester.pump();
+    await tester.tap(rightCard);
+    await tester.pump(const Duration(milliseconds: 1200));
+  }
+
+  expect(find.text('匹配完成！'), findsOneWidget);
+  await tester.pump(const Duration(milliseconds: 2600));
+  expect(find.textContaining('互动已点亮'), findsOneWidget);
+  expect(find.text('返回章节'), findsOneWidget);
+
+  await tester.tap(find.text('返回章节'));
   await tester.pumpAndSettle();
 }
 
@@ -439,13 +535,22 @@ Future<void> _dragCaseParticipant(
     ValueKey<String>('ipo_case_drop_target_$dropTargetIndex'),
   );
 
+  for (int i = 0; i < 10 && dropTarget.evaluate().isEmpty; i += 1) {
+    await tester.pump(const Duration(milliseconds: 120));
+  }
   await tester.ensureVisible(dropTarget);
+  await tester.pump();
+
+  for (int i = 0; i < 10 && dragCard.evaluate().isEmpty; i += 1) {
+    await tester.pump(const Duration(milliseconds: 120));
+  }
+  await tester.ensureVisible(dragCard);
   await tester.pump();
 
   final Offset dragStart = tester.getCenter(dragCard);
   final Offset dropCenter = tester.getCenter(dropTarget);
   final TestGesture gesture = await tester.startGesture(dragStart);
-  await tester.pump(kLongPressTimeout + const Duration(milliseconds: 120));
+  await tester.pump(const Duration(milliseconds: 80));
   await gesture.moveTo(dropCenter);
   await tester.pump(const Duration(milliseconds: 180));
   await gesture.up();
