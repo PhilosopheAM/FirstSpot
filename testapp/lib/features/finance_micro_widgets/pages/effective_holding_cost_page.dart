@@ -4,8 +4,8 @@
 // Module: Effective Holding Cost Page - standalone fund cost calculator
 // 模块: 基金真实持有成本页 - 独立基金费用测算入口
 //
-// Dependencies: flutter/material.dart, effective_holding_cost_widget
-// 依赖: flutter/material.dart, 基金真实持有成本估算器组件
+// Dependencies: flutter/material.dart, effective_holding_cost_widget, finance_micro_widget_decoration
+// 依赖: flutter/material.dart, 基金真实持有成本估算器组件, 金融小组件修饰图
 //
 // Author: Harry Chen
 // Email: 11911421@mail.sustech.edu.cn
@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 
 import '../widgets/effective_holding_cost_widget.dart';
+import '../widgets/finance_micro_widget_decoration.dart';
 
 class EffectiveHoldingCostPage extends StatelessWidget {
   const EffectiveHoldingCostPage({super.key});
@@ -38,7 +39,12 @@ class EffectiveHoldingCostPage extends StatelessWidget {
       body: const SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: EffectiveHoldingCostWidget(),
+          child: Column(
+            children: <Widget>[
+              EffectiveHoldingCostWidget(),
+              FinanceMicroWidgetBottomDecoration(),
+            ],
+          ),
         ),
       ),
     );

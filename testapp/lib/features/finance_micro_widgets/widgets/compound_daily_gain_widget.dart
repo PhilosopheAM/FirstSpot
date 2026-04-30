@@ -458,45 +458,89 @@ Future<double?> _showNumberInputDialog({
   required double max,
   required String suffix,
 }) async {
-  final controller = TextEditingController(
-    text: initialValue.toStringAsFixed(initialValue >= 10 ? 0 : 2),
-  );
-  final result = await showDialog<double>(
+  return showDialog<double>(
     context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(
-            suffixText: suffix,
-            helperText:
-                '范围：${min.toStringAsFixed(2)} - ${max.toStringAsFixed(2)}',
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final parsed = double.tryParse(controller.text.trim());
-              if (parsed == null) {
-                return;
-              }
-              Navigator.of(context).pop(parsed.clamp(min, max).toDouble());
-            },
-            child: const Text('确认'),
-          ),
-        ],
-      );
-    },
+    builder: (context) => _NumberInputDialog(
+      title: title,
+      initialValue: initialValue,
+      min: min,
+      max: max,
+      suffix: suffix,
+    ),
   );
-  controller.dispose();
-  return result;
+}
+
+class _NumberInputDialog extends StatefulWidget {
+  const _NumberInputDialog({
+    required this.title,
+    required this.initialValue,
+    required this.min,
+    required this.max,
+    required this.suffix,
+  });
+
+  final String title;
+  final double initialValue;
+  final double min;
+  final double max;
+  final String suffix;
+
+  @override
+  State<_NumberInputDialog> createState() => _NumberInputDialogState();
+}
+
+class _NumberInputDialogState extends State<_NumberInputDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.initialValue.toStringAsFixed(
+        widget.initialValue >= 10 ? 0 : 2,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final parsed = double.tryParse(_controller.text.trim());
+    if (parsed == null) {
+      return;
+    }
+    Navigator.of(context).pop(parsed.clamp(widget.min, widget.max).toDouble());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: InputDecoration(
+          suffixText: widget.suffix,
+          helperText:
+              '范围：${widget.min.toStringAsFixed(2)} - '
+              '${widget.max.toStringAsFixed(2)}',
+        ),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
+        FilledButton(onPressed: _submit, child: const Text('确认')),
+      ],
+    );
+  }
 }
 
 String _formatMoney(double value) => '¥${value.toStringAsFixed(2)}';

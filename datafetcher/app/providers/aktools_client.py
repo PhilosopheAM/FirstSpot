@@ -1,9 +1,9 @@
 """
-Last Updated: 2026-04-21
-最后更新: 2026-04-21
+Last Updated: 2026-04-30
+最后更新: 2026-04-30
 
-Module: AKTools HTTP client for DataFetcher fallback sources.
-模块: DataFetcher 的 AKTools HTTP 客户端（用于多数据源降级）。
+Module: AKTools HTTP client for DataFetcher market, profile, and rating sources.
+模块: DataFetcher 的 AKTools HTTP 客户端（行情、资料与评级数据源）。
 
 Dependencies: urllib, json, app.config
 依赖: urllib, json, app.config
@@ -68,6 +68,48 @@ class AktoolsClient:
         """
         url = f"{AKTOOLS_BASE_URL}/api/public/stock_info_a_code_name"
         return _request_rows(url, params={})
+
+    def fetch_individual_info_rows(self, symbol: str) -> list[dict[str, Any]]:
+        """Fetches Eastmoney individual stock info rows.
+        从东方财富个股信息接口拉取基础资料行。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_individual_info_em"
+        return _request_rows(url, params={"symbol": symbol})
+
+    def fetch_xueqiu_spot_rows(self, symbol: str) -> list[dict[str, Any]]:
+        """Fetches Xueqiu valuation snapshot rows.
+        从雪球个股快照接口拉取估值指标行。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_individual_spot_xq"
+        return _request_rows(url, params={"symbol": symbol})
+
+    def fetch_xueqiu_basic_info_rows(self, symbol: str) -> list[dict[str, Any]]:
+        """Fetches Xueqiu company profile rows.
+        从雪球公司概况接口拉取公司简介行。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_individual_basic_info_xq"
+        return _request_rows(url, params={"symbol": symbol})
+
+    def fetch_institute_rating_rows(self, symbol: str) -> list[dict[str, Any]]:
+        """Fetches Sina institute rating records for one stock.
+        从新浪机构推荐池拉取单只股票评级记录。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_institute_recommend_detail"
+        return _request_rows(url, params={"symbol": symbol})
+
+    def fetch_concept_board_rows(self) -> list[dict[str, Any]]:
+        """Fetches Eastmoney concept board list.
+        从东方财富拉取概念板块列表。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_board_concept_name_em"
+        return _request_rows(url, params={})
+
+    def fetch_concept_constituent_rows(self, concept_name: str) -> list[dict[str, Any]]:
+        """Fetches constituent stocks for one concept board.
+        拉取单个概念板块的成分股列表。
+        """
+        url = f"{AKTOOLS_BASE_URL}/api/public/stock_board_concept_cons_em"
+        return _request_rows(url, params={"symbol": concept_name})
 
 
 def rolling_window_for_trading(days: int = 420) -> tuple[str, str]:
