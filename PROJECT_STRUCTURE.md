@@ -17,6 +17,7 @@ FirstSpot/
 │   ├── UI_design_resource/   #   UI 美术资源（图像生成模型输出全部进入此处）
 │   └── Sound_design_resource/#   音效 / 音频资源（软件内音效全部进入此处）
 ├── Reading_Material/         # 学术与理论参考 PDF
+├── 毕业论文_Tempo/            # 毕业论文过程材料、任务书、开题/中期资料与论文批注修改稿
 ├── developer_maintenance/    # 代码维护说明（按模块拆分的 .md）
 ├── .cursor/                  # Cursor 规则、技能、计划
 ├── README.md                 # 项目简介
@@ -129,7 +130,20 @@ Design_Resource/
 - `游戏化实战.pdf`
 - `投资者教育App_游戏化交互设计原则与方法.md`
 
-### 2.6 `developer_maintenance/` — 代码维护说明
+### 2.6 `毕业论文_Tempo/` — 毕业论文材料
+
+存放本科毕业设计（论文）过程材料，包括任务书、开题报告、中期材料、指导老师批注版论文、批注修改建议稿与后续论文修订过程文件。当前重点子目录：
+
+```text
+毕业论文_Tempo/
+└── Bachelor_Graduation/      # 本科毕业论文任务书、开题/中期材料、论文初稿与批注修改建议
+```
+
+新增论文修订辅助文档：
+
+- `Bachelor_Graduation/论文批注修改建议与插入稿.md`：基于指导老师 Word 批注生成的 Markdown 修改建议，包含插入位置、建议文本、图示文字描述与参考文献二次审查记录。
+
+### 2.7 `developer_maintenance/` — 代码维护说明
 
 ```text
 developer_maintenance/
@@ -155,7 +169,7 @@ developer_maintenance/
 
 职责：每个 `.md` 记录一个模块的职责、关键文件、对外接口、依赖关系和变更日志。**每次改代码都要同步更新对应文档**（由 `.cursor/rules/firstspot-developer-maintenance.mdc` 强制）。
 
-### 2.7 `.cursor/` — Cursor 配置
+### 2.8 `.cursor/` — Cursor 配置
 
 ```text
 .cursor/
@@ -234,3 +248,4 @@ developer_maintenance/
 - 2026-04-29: 新增 `UX-Product-Design/V1/finance-micro-widgets-figma-prototype.md`，记录金融小组件 Figma 原型链接、文件 Key、可播放节点、组件术语与下次继续编辑步骤。
 - 2026-04-29: 新增 `testapp/lib/features/finance_micro_widgets/` 金融小组件 feature，并新增对应入口与两个组件级维护文档。
 - 2026-04-29: `finance_micro_widgets` 移除双组件总览页，新增 `effective_holding_cost_page.dart` 与 `compound_daily_gain_page.dart` 两个独立工具页面。
+- 2026-05-11: 新增 `毕业论文_Tempo/Bachelor_Graduation/论文批注修改建议与插入稿.md`，整理指导老师论文批注对应的正文插入稿、图示文字描述与参考文献二次审查记录，并补充 `毕业论文_Tempo/` 目录职责说明。
