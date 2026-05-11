@@ -8,7 +8,7 @@
 
 | 路径 | 作用 |
 |---|---|
-| `datafetcher/app/models.py` | 定义 Pydantic 模型 `DailyBar`、`DailyResponse` |
+| `datafetcher/app/models.py` | 定义 Pydantic 模型 `DailyBar`、`DailyResponse` 与个股洞察聚合响应模型 |
 
 ## 对外接口
 
@@ -40,13 +40,29 @@ Flutter 消费的顶层响应结构。
 | `source_used` | `str` | 最终实际命中的源，取值：`eastmoney:stock_zh_a_hist` / `sina:stock_zh_a_daily` / `canghai:stock_daily` |
 | `data` | `list[DailyBar]` | 日线列表，按日期升序 |
 
+### `StockInsightResponse`
+
+个股信息页使用的页面级聚合响应。
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `symbol` | `str` | 标准化后的 6 位股票代码 |
+| `profile` | `StockInsightProfile` | 证券名称、英文名、交易所、行业、概念标签、公司简介、主营业务 |
+| `metrics` | `StockInsightMetrics` | 市值、流通市值、PE、股息/股息率、52 周高低 |
+| `analyst_rating` | `StockInsightAnalystRating` | 评级总数、buy/hold/sell 计数、最新评级与来源 |
+| `financial_quarters` | `list[StockInsightFinancialQuarter]` | 最近季度营收、净利润、归母净利润摘要 |
+| `daily` | `DailyResponse` | 核心日线响应 |
+| `source_used` | `list[str]` | 成功命中的数据源列表 |
+| `source_errors` | `dict[str, str]` | 非核心数据源失败原因 |
+
 ## 依赖关系
 
 依赖：`pydantic`
 
-被依赖：`app.main`、`app.services.daily_service`（以及 Flutter 端对应的解码结构）
+被依赖：`app.main`、`app.services.daily_service`、`app.services.stock_insight_service`（以及 Flutter 端对应的解码结构）
 
 ## 变更日志
 
+- 2026-04-30: 新增 `StockInsightProfile`、`StockInsightMetrics`、`StockInsightFinancialQuarter`、`StockInsightAnalystRating` 与 `StockInsightResponse`，支撑个股洞察聚合接口。
 - 2026-04-20: 初始化文档；当前 2 个模型，`DailyBar.amount` 为可空。
 - 2026-04-21: `DailyResponse` 新增 `stock_name` 字段，支持代码名称匹配结果回传。

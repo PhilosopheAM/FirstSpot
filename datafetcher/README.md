@@ -6,6 +6,7 @@
 - 输入解析：`symbol` 同时支持股票代码（如 `600519`）和股票名称（如 `贵州茅台`）
 - 字段标准化：统一成 `date/open/high/low/close/volume/amount`
 - 固定返回最近 N 条日线（默认 120）
+- 个股洞察聚合：提供日线、公司资料、估值、评级与季度财务摘要的页面级接口
 
 > 当前按你的要求：**不做本地缓存**，只做请求、拉取、处理、交付。
 
@@ -57,6 +58,8 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 
 ## 3) Flutter 请求格式（当前假定）
 
+### 日线接口
+
 ```http
 GET /api/v1/stocks/{symbol}/daily?limit=120
 ```
@@ -93,6 +96,21 @@ GET http://127.0.0.1:8000/api/v1/stocks/%E8%B4%B5%E5%B7%9E%E8%8C%85%E5%8F%B0/dai
   ]
 }
 ```
+
+### 个股洞察聚合接口
+
+```http
+GET /api/v1/stocks/{symbol}/insight?daily_limit=120&include_concepts=false
+```
+
+返回 `StockInsightResponse`，包含：
+
+- `profile`：证券名称、英文名、交易所、行业、概念标签、公司简介、主营业务
+- `metrics`：总市值、流通市值、PE、股息率、52 周高低
+- `analyst_rating`：机构评级记录聚合后的 buy / hold / sell 计数
+- `financial_quarters`：最近季度营收、净利润、归母净利润
+- `daily`：复用 `DailyResponse`
+- `source_errors`：非核心数据源失败原因；核心日线失败才会返回 HTTP 错误
 
 ---
 

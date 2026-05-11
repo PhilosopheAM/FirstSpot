@@ -4,8 +4,8 @@
 /// Module: Reusable stock insight page wired to data middle-layer service.
 /// 模块: 连接数据中间层服务的可复用个股信息页面。
 ///
-/// Dependencies: flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service, price_fluctuation_chart_v2
-/// 依赖: flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service, price_fluctuation_chart_v2
+/// Dependencies: dart:math, flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service
+/// 依赖: dart:math, flutter/material.dart, fl_chart, stock_insight_models, stock_insight_data_service
 ///
 /// Author: Harry Chen
 /// Email: 11911421@mail.sustech.edu.cn
@@ -16,7 +16,6 @@ import 'package:flutter/material.dart';
 
 import '../data/stock_insight_data_service.dart';
 import '../domain/stock_insight_models.dart';
-import '../widgets/price_fluctuation_chart_v2.dart';
 
 /// Standalone reusable page for stock insight display.
 /// 可独立复用的个股信息展示页。
@@ -31,17 +30,19 @@ class StockInsightTemplatePage extends StatefulWidget {
   final StockInsightDataService? dataService;
 
   @override
-  State<StockInsightTemplatePage> createState() => _StockInsightTemplatePageState();
+  State<StockInsightTemplatePage> createState() =>
+      _StockInsightTemplatePageState();
 }
 
 class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
-  late final StockInsightDataService _dataService = widget.dataService ??
-      const StockInsightDataService(
-        backendApi: MockStockInsightBackendApi(),
-      );
-  late final Future<StockInsightViewData> _futureData = _dataService.loadPageData(
-    ticker: widget.ticker,
-  );
+  static const double _dayDurationX = 86400000;
+  static const int _maxRenderedChartPointCount = 64;
+
+  late final StockInsightDataService _dataService =
+      widget.dataService ??
+      const StockInsightDataService(backendApi: MockStockInsightBackendApi());
+  late final Future<StockInsightViewData> _futureData = _dataService
+      .loadPageData(ticker: widget.ticker);
 
   bool _showTicker = false;
   String _selectedTimeFrame = '1M';
@@ -50,73 +51,87 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
   Widget build(BuildContext context) {
     return FutureBuilder<StockInsightViewData>(
       future: _futureData,
-      builder: (
-        BuildContext context,
-        AsyncSnapshot<StockInsightViewData> snapshot,
-      ) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-            backgroundColor: Colors.white,
-            body: Center(child: CircularProgressIndicator(color: Color(0xFF1ACC4D))),
-          );
-        }
-
-        if (snapshot.hasError || !snapshot.hasData) {
-          return Scaffold(
-            backgroundColor: Colors.white,
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Text(
-                  '数据加载失败，请稍后重试\n${snapshot.error ?? ''}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF4B5760)),
+      builder:
+          (BuildContext context, AsyncSnapshot<StockInsightViewData> snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Scaffold(
+                backgroundColor: Colors.white,
+                body: Center(
+                  child: CircularProgressIndicator(color: Color(0xFF1ACC4D)),
                 ),
-              ),
-            ),
-          );
-        }
+              );
+            }
 
-        final StockInsightViewData data = snapshot.data!;
-        final List<FlSpot> chartSpots = data.dayLineSeries
-            .map((PricePoint point) => FlSpot(point.x, point.y))
-            .toList(growable: false);
-
-        // Calculate latest price and change
-        final double latestPrice = data.dayLineSeries.last.y;
-        final double prevPrice = data.dayLineSeries.length > 1 
-            ? data.dayLineSeries[data.dayLineSeries.length - 2].y 
-            : latestPrice;
-        final double change = latestPrice - prevPrice;
-        final double changePercent = (change / prevPrice) * 100;
-        final bool isPositive = change >= 0;
-        final Color changeColor = isPositive ? const Color(0xFF1ACC4D) : const Color(0xFFE53333);
-        final String sign = isPositive ? '+' : '';
-
-        return Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: CustomScrollView(
-              slivers: <Widget>[
-                _buildTopBar(data.profile),
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      _buildHeroArea(latestPrice, change, changePercent, sign, changeColor, chartSpots),
-                      _buildStatsGrid(),
-                      _buildAnalystRatings(),
-                      _buildFinancialHealth(),
-                      _buildAboutCompany(data.profile),
-                      _buildMyoCompanion(),
-                    ],
+            if (snapshot.hasError || !snapshot.hasData) {
+              return Scaffold(
+                backgroundColor: Colors.white,
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      '数据加载失败，请稍后重试\n${snapshot.error ?? ''}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF4B5760),
+                      ),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        );
-      },
+              );
+            }
+
+            final StockInsightViewData data = snapshot.data!;
+            final List<FlSpot> chartSpots = data.dayLineSeries
+                .map((PricePoint point) => FlSpot(point.x, point.y))
+                .toList(growable: false);
+            final List<FlSpot> visibleChartSpots =
+                _displaySpotsForSelectedTimeFrame(chartSpots);
+
+            // Calculate latest price and change
+            final double latestPrice = data.dayLineSeries.last.y;
+            final double prevPrice = data.dayLineSeries.length > 1
+                ? data.dayLineSeries[data.dayLineSeries.length - 2].y
+                : latestPrice;
+            final double change = latestPrice - prevPrice;
+            final double changePercent = (change / prevPrice) * 100;
+            final bool isPositive = change >= 0;
+            final Color changeColor = isPositive
+                ? const Color(0xFF1ACC4D)
+                : const Color(0xFFE53333);
+            final String sign = isPositive ? '+' : '';
+
+            return Scaffold(
+              backgroundColor: Colors.white,
+              body: SafeArea(
+                child: CustomScrollView(
+                  slivers: <Widget>[
+                    _buildTopBar(data.profile),
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          _buildHeroArea(
+                            latestPrice,
+                            change,
+                            changePercent,
+                            sign,
+                            changeColor,
+                            visibleChartSpots,
+                          ),
+                          _buildStatsGrid(),
+                          _buildAnalystRatings(),
+                          _buildFinancialHealth(),
+                          _buildAboutCompany(data.profile),
+                          _buildMyoCompanion(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
     );
   }
 
@@ -127,7 +142,20 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: <Widget>[
-            const Icon(Icons.arrow_back, size: 24, color: Colors.black),
+            SizedBox(
+              width: 48,
+              child: IconButton(
+                tooltip: '返回',
+                icon: const Icon(
+                  Icons.arrow_back,
+                  size: 24,
+                  color: Colors.black,
+                ),
+                onPressed: () {
+                  Navigator.of(context).maybePop();
+                },
+              ),
+            ),
             GestureDetector(
               onTap: () {
                 setState(() {
@@ -156,14 +184,24 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
                 ],
               ),
             ),
-            const Icon(Icons.star_border, size: 24, color: Colors.black),
+            const SizedBox(
+              width: 48,
+              child: Icon(Icons.star_border, size: 24, color: Colors.black),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeroArea(double price, double change, double changePercent, String sign, Color changeColor, List<FlSpot> spots) {
+  Widget _buildHeroArea(
+    double price,
+    double change,
+    double changePercent,
+    String sign,
+    Color changeColor,
+    List<FlSpot> spots,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Column(
@@ -212,8 +250,8 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
                       show: true,
                       gradient: LinearGradient(
                         colors: <Color>[
-                          changeColor.withOpacity(0.2),
-                          changeColor.withOpacity(0.0),
+                          changeColor.withValues(alpha: 0.2),
+                          changeColor.withValues(alpha: 0),
                         ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -227,18 +265,26 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <String>['1D', '1W', '1M', '3M', '1Y', 'ALL'].map((String time) {
+            children: <String>['1D', '1W', '1M', '3M', '1Y', 'ALL'].map((
+              String time,
+            ) {
               final bool isSelected = time == _selectedTimeFrame;
               return GestureDetector(
+                key: ValueKey<String>('stock-timeframe-$time'),
                 onTap: () {
                   setState(() {
                     _selectedTimeFrame = time;
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFFE5F2E5) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFFE5F2E5)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -247,7 +293,9 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
                       fontFamily: 'Inter',
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: isSelected ? const Color(0xFF1A9933) : const Color(0xFF808080),
+                      color: isSelected
+                          ? const Color(0xFF1A9933)
+                          : const Color(0xFF808080),
                     ),
                   ),
                 ),
@@ -259,6 +307,74 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
     );
   }
 
+  List<FlSpot> _displaySpotsForSelectedTimeFrame(List<FlSpot> spots) {
+    return _downsampleForSmoothDisplay(_spotsForSelectedTimeFrame(spots));
+  }
+
+  List<FlSpot> _spotsForSelectedTimeFrame(List<FlSpot> spots) {
+    if (spots.length <= 2 || _selectedTimeFrame == 'ALL') {
+      return spots;
+    }
+
+    final double? durationX = _durationForTimeFrame(_selectedTimeFrame);
+    if (durationX == null) {
+      return spots;
+    }
+
+    final double minVisibleX = spots.last.x - durationX;
+    final List<FlSpot> filteredSpots = spots
+        .where((FlSpot spot) => spot.x >= minVisibleX)
+        .toList(growable: false);
+
+    if (filteredSpots.length >= 2) {
+      return filteredSpots;
+    }
+
+    return spots.sublist(max(0, spots.length - 2));
+  }
+
+  List<FlSpot> _downsampleForSmoothDisplay(List<FlSpot> spots) {
+    if (spots.length <= _maxRenderedChartPointCount) {
+      return spots;
+    }
+
+    final int lastIndex = spots.length - 1;
+    final double step = lastIndex / (_maxRenderedChartPointCount - 1);
+    final List<FlSpot> sampledSpots = <FlSpot>[];
+
+    for (int index = 0; index < _maxRenderedChartPointCount; index++) {
+      final int spotIndex = (index * step).round().clamp(0, lastIndex).toInt();
+      final FlSpot spot = spots[spotIndex];
+      if (sampledSpots.isEmpty || sampledSpots.last.x != spot.x) {
+        sampledSpots.add(spot);
+      }
+    }
+
+    if (sampledSpots.last.x != spots.last.x) {
+      sampledSpots.add(spots.last);
+    }
+
+    return sampledSpots;
+  }
+
+  double? _durationForTimeFrame(String timeFrame) {
+    switch (timeFrame) {
+      case '1D':
+        return _dayDurationX;
+      case '1W':
+        return _dayDurationX * 7;
+      case '1M':
+        return _dayDurationX * 30;
+      case '3M':
+        return _dayDurationX * 90;
+      case '1Y':
+        return _dayDurationX * 365;
+      case 'ALL':
+        return null;
+    }
+    return null;
+  }
+
   Widget _buildStatsGrid() {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -268,7 +384,9 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
             children: <Widget>[
               Expanded(child: _buildStatCard('Market Cap', '2.07T', '')),
               const SizedBox(width: 16),
-              Expanded(child: _buildStatCard('P/E Ratio', '27.8', 'Reasonable')),
+              Expanded(
+                child: _buildStatCard('P/E Ratio', '27.8', 'Reasonable'),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -276,7 +394,9 @@ class _StockInsightTemplatePageState extends State<StockInsightTemplatePage> {
             children: <Widget>[
               Expanded(child: _buildStatCard('Div Yield', '2.84%', '')),
               const SizedBox(width: 16),
-              Expanded(child: _buildStatCard('52W Range', '¥1400 - 1750', 'Near High')),
+              Expanded(
+                child: _buildStatCard('52W Range', '¥1400 - 1750', 'Near High'),
+              ),
             ],
           ),
         ],

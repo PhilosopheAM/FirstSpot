@@ -12,6 +12,7 @@ pytest 测试集合。当前主要覆盖 `services/daily_service.py` 的降级�
 | `datafetcher/tests/test_daily_service.py` | `DailyService.get_latest_daily` 手工集成测试（代码/名称匹配 + 贵州茅台全历史） |
 | `datafetcher/tests/test_daily_service_canghai_only.py` | 降级到沧海这一层的专项测试 |
 | `datafetcher/tests/test_canghai_client.py` | Canghai provider 单元测试 |
+| `datafetcher/tests/test_stock_insight_service.py` | `StockInsightService` 聚合逻辑单元测试，覆盖可选源成功与失败降级 |
 
 ## 运行方式
 
@@ -34,5 +35,6 @@ pytest -q
 
 ## 变更日志
 
+- 2026-04-30: 新增 `test_stock_insight_service.py`，用内存假 client 覆盖个股洞察聚合与可选数据源失败降级。
 - 2026-04-20: 初始化文档；当前 3 个测试文件，覆盖 Service 主流程 + Canghai 降级专项 + Canghai client。
 - 2026-04-21: `test_daily_service.py` 更新为“贵州茅台上市至今”验证用例，并覆盖名称输入匹配链路。

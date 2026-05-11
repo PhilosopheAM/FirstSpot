@@ -15,6 +15,7 @@ developer_maintenance/
 │   ├── models.md             #   响应模型 (app/models.py)
 │   ├── providers.md          #   第三方数据客户端 (app/providers/*)
 │   ├── services-daily.md     #   日线数据服务 (app/services/daily_service.py)
+│   ├── services-stock-insight.md # 个股洞察聚合服务 (app/services/stock_insight_service.py)
 │   └── tests.md              #   测试说明 (tests/*)
 └── frontend/                 # 前端 (testapp) 功能文档
     ├── _overview.md          #   前端整体架构
@@ -58,6 +59,7 @@ developer_maintenance/
 
 ## 变更日志
 
+- 2026-04-30: 新增 `backend/services-stock-insight.md`，登记个股洞察聚合服务。
 - 2026-04-20: 建立 `developer_maintenance/` 文档体系与配套规则。
 - 2026-04-25: 新增 `frontend/feature-learning-guidance.md`，登记投资者教育 12 章课程模块。
 - 2026-04-29: 新增金融小组件入口与两个组件级维护文档，登记持有成本估算器和复利日均收益模拟器。

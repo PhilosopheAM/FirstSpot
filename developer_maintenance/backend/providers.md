@@ -22,6 +22,12 @@
 | `fetch_sina_daily(symbol, start_date, end_date)` | `AKTOOLS/api/public/stock_zh_a_daily` | 带市场前缀代码（sh/sz/bj） | `list[dict]`（新浪字段） |
 | `fetch_spot_code_name_rows()` | `AKTOOLS/api/public/stock_zh_a_spot_em` | 无 | `list[dict]`（实时行情含代码/名称） |
 | `fetch_basic_code_name_rows()` | `AKTOOLS/api/public/stock_info_a_code_name` | 无 | `list[dict]`（基础代码名录） |
+| `fetch_individual_info_rows(symbol)` | `AKTOOLS/api/public/stock_individual_info_em` | 6 位代码 | `list[dict]`（item/value：市值、行业等） |
+| `fetch_xueqiu_spot_rows(symbol)` | `AKTOOLS/api/public/stock_individual_spot_xq` | 雪球格式代码（如 `SH600519`） | `list[dict]`（item/value：PE、股息率、52 周高低等） |
+| `fetch_xueqiu_basic_info_rows(symbol)` | `AKTOOLS/api/public/stock_individual_basic_info_xq` | 雪球格式代码 | `list[dict]`（item/value：公司简介、主营业务等） |
+| `fetch_institute_rating_rows(symbol)` | `AKTOOLS/api/public/stock_institute_recommend_detail` | 6 位代码 | `list[dict]`（机构评级记录） |
+| `fetch_concept_board_rows()` | `AKTOOLS/api/public/stock_board_concept_name_em` | 无 | `list[dict]`（概念板块列表） |
+| `fetch_concept_constituent_rows(concept_name)` | `AKTOOLS/api/public/stock_board_concept_cons_em` | 概念名称 | `list[dict]`（概念成分股列表） |
 
 模块级工具函数：
 
@@ -35,6 +41,7 @@
 | 方法 | 上游端点 | 入参 | 返回 |
 |---|---|---|---|
 | `fetch_canghai_daily(exchange_code, ticker, start_date, end_date)` | `TSANGHI/api/fin/stock/{exchange_code}/daily` | 交易所代码（XSHG/XSHGB/XSHE/XSHEB/BJSE）+ 6 位代码 + `YYYY-MM-DD` | `list[dict]`（沧海字段） |
+| `fetch_income_statement_quarterly(exchange_code, ticker, start_date=None, end_date=None)` | `TSANGHI/api/fin/stock/{exchange_code}/income/statement/quarterly` | 交易所代码 + 6 位代码 + 可选报告期范围 | `list[dict]`（季度利润表字段） |
 
 - 请求需带 `token`（取自 `app.config.TSANGHI_API_TOKEN`）。
 - 沧海返回可能是裸 list，也可能是 `{"data": [...]}` 或错误体；客户端做了三分支兼容。
@@ -63,5 +70,6 @@
 
 ## 变更日志
 
+- 2026-04-30: AKTools provider 新增个股资料、雪球估值/公司简介、机构评级和概念板块接口；Canghai provider 新增季度利润表接口。
 - 2026-04-20: 初始化文档；当前 2 个 provider：Aktools（双子方法）+ Canghai。
 - 2026-04-21: `AktoolsClient` 新增代码名录双端点（spot 主源 + basic 降级）以支撑名称匹配。

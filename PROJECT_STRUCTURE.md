@@ -35,7 +35,11 @@ FirstSpot/
 ```text
 datafetcher/
 ├── app/                      # FastAPI 应用主体（路由 / 服务 / 模型）
-├── tests/                    # 后端单元测试 / 集成测试
+│   ├── main.py               #   HTTP 入口：健康检查、日线接口、个股洞察聚合接口
+│   ├── models.py             #   Pydantic 响应模型：日线与 StockInsightResponse
+│   ├── providers/            #   AKTools / Canghai 第三方数据源客户端
+│   └── services/             #   DailyService 与 StockInsightService
+├── tests/                    # 后端单元测试 / 集成测试；含 stock insight 聚合服务测试
 ├── requirements.txt          # Python 依赖清单
 ├── README.md                 # 后端启动与开发说明
 └── aktools_log.log           # akshare 运行日志（应加入 .gitignore）
@@ -56,9 +60,9 @@ testapp/
 │       ├── learning_guidance/ #     投资者教育 12 章课程、题库、Myo 练习反馈与收藏状态
 │       ├── onboarding/       #     首开引导与首页
 │       └── stock_insight/    #     个股信息页
-├── test/                     # Flutter 测试
+├── test/                     # Flutter 测试；含 finance_micro_widgets_test.dart 与 stock_insight_template_page_test.dart
 ├── assets/audio/             # App 内音效；含 onboarding 与 learning_guidance 音频
-├── assets/images/characters/myo/ # Myo 表情素材，供学习讲解与反馈复用
+├── assets/images/characters/myo/ # Myo 表情与装饰素材，供学习讲解、反馈和金融小组件复用
 ├── assets/images/guidance_cards/ # 投资者教育 12 章线条风格卡片图
 ├── assets/images/learning_guidance/ # 投资者教育章末练习背景与通过/重练插画
 ├── android/ ios/ web/ windows/ macos/ linux/   # 各平台工程
@@ -78,7 +82,8 @@ UX-Product-Design/
 │   ├── first-open-onboarding.md            # V1 首开引导结构层（页面列表 / 元素清单）
 │   ├── Gamified_Onboarding_Design.md       # V1 游戏化设计（Duolingo-style，面向 Z 世代 16-28）
 │   ├── stock-detail-page-design.md         # V1 个股/基金详情页极简 UX 设计文档
-│   └── finance-micro-widgets-figma-prototype.md # V1 金融小组件 Figma 原型入口、节点与交互维护文档
+│   ├── finance-micro-widgets-figma-prototype.md # V1 金融小组件 Figma 原型入口、节点与交互维护文档
+│   └── long-term-holding-compound-confidence-figma-prototype.md # V1 长期持仓复利信心页 Figma 原型维护文档
 └── guidance/                 # 投资者教育学习框架（12 章 + 总览）
     ├── 00_学习框架总览.md     #   索引与收藏卡片系统总览
     ├── 01_什么是二级市场.md
@@ -108,6 +113,7 @@ UX-Product-Design/
 ```text
 Design_Resource/
 ├── UI_design_resource/       # UI 美术资源
+│   ├── characters/myo/       #   Myo 角色插画成品；含金融小组件底部装饰图
 │   ├── guidance_cards/       #   投资者教育 12 章线条风格主视觉与预览拼图
 │   ├── learning_guidance/    #   投资者教育章末练习背景图、通过页与重练页插画
 │   ├── guidance_rewards/     #   投资者教育收藏奖励规则与历史素材提示词归档
@@ -155,6 +161,7 @@ developer_maintenance/
 │   ├── models.md
 │   ├── providers.md
 │   ├── services-daily.md
+│   ├── services-stock-insight.md
 │   └── tests.md
 └── frontend/                 # 前端功能文档（按 feature 划分）
     ├── _overview.md
@@ -248,4 +255,9 @@ developer_maintenance/
 - 2026-04-29: 新增 `UX-Product-Design/V1/finance-micro-widgets-figma-prototype.md`，记录金融小组件 Figma 原型链接、文件 Key、可播放节点、组件术语与下次继续编辑步骤。
 - 2026-04-29: 新增 `testapp/lib/features/finance_micro_widgets/` 金融小组件 feature，并新增对应入口与两个组件级维护文档。
 - 2026-04-29: `finance_micro_widgets` 移除双组件总览页，新增 `effective_holding_cost_page.dart` 与 `compound_daily_gain_page.dart` 两个独立工具页面。
+- 2026-04-29: 导入 `myo_playing_ball_yarn.png` 到 `Design_Resource/UI_design_resource/characters/myo/` 并同步到 `testapp/assets/images/characters/myo/`，用于金融小组件页面底部装饰。
+- 2026-04-29: 新增 `testapp/test/stock_insight_template_page_test.dart`，覆盖个股窗口返回按钮与时间窗口切换；同步修复个股窗口返回和时间筛选交互。
+- 2026-04-29: 新增 `testapp/test/finance_micro_widgets_test.dart`，覆盖复利计算器本金手动输入弹窗关闭流程；同步修复弹窗 `TextEditingController` 生命周期。
+- 2026-04-30: 新增 `datafetcher/app/services/stock_insight_service.py` 与 `datafetcher/tests/test_stock_insight_service.py`，后端提供 `/api/v1/stocks/{symbol}/insight` 个股洞察聚合接口；同步新增 `developer_maintenance/backend/services-stock-insight.md`。
+- 2026-04-30: 新增 `UX-Product-Design/V1/long-term-holding-compound-confidence-figma-prototype.md`，记录长期持仓复利信心页 Figma 原型入口、节点、计算口径与后续交互方向。
 - 2026-05-11: 新增 `毕业论文_Tempo/Bachelor_Graduation/论文批注修改建议与插入稿.md`，整理指导老师论文批注对应的正文插入稿、图示文字描述与参考文献二次审查记录，并补充 `毕业论文_Tempo/` 目录职责说明。

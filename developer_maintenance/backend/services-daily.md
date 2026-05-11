@@ -103,7 +103,7 @@
 
 依赖：`app.models.DailyBar / DailyResponse`、`app.providers.aktools_client`、`app.providers.canghai_client`
 
-被依赖：`app.main`（通过 `DailyService` 实例）
+被依赖：`app.main`（通过 `DailyService` 实例）、`app.services.stock_insight_service`（作为个股洞察聚合的核心日线来源）
 
 ## 扩展流程
 
@@ -113,6 +113,7 @@
 
 ## 变更日志
 
+- 2026-04-30: `DailyService` 被 `StockInsightService` 复用为个股洞察聚合接口的核心日线数据来源；本文件无业务逻辑变更。
 - 2026-04-20: 初始化文档；当前降级序列为 东财 → 新浪 → 沧海。
 - 2026-04-21: 重构为 `StockIdentityResolver + DailyService` 分层；新增名称匹配（含端点降级）；日线窗口改为随 limit 动态扩展。
 - 2026-04-21: 日线与名称匹配各增加一层 local akshare 本地直连降级，降低对 AKTools/Canghai 运行态依赖。

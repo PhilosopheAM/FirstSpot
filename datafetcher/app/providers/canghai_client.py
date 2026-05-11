@@ -1,9 +1,9 @@
 """
-Last Updated: 2026-03-03
-最后更新: 2026-03-03
+Last Updated: 2026-04-30
+最后更新: 2026-04-30
 
-Module: Canghai (Tsanghi) HTTP client for DataFetcher fallback source.
-模块: DataFetcher 的沧海数据 (Tsanghi) HTTP 客户端，作为数据源降级的一部分。
+Module: Canghai (Tsanghi) HTTP client for market and financial statement sources.
+模块: DataFetcher 的沧海数据 (Tsanghi) HTTP 客户端，提供行情与财务报表数据源。
 
 Dependencies: urllib, json, app.config
 依赖: urllib, json, app.config
@@ -23,8 +23,8 @@ from app.config import REQUEST_TIMEOUT_SECONDS, TSANGHI_API_TOKEN, TSANGHI_BASE_
 
 
 class CanghaiClient:
-    """Encapsulates Canghai (Tsanghi) stock daily API calls.
-    封装沧海数据(日线行情) API 调用细节。
+    """Encapsulates Canghai (Tsanghi) stock API calls.
+    封装沧海数据股票 API 调用细节。
     """
 
     def fetch_canghai_daily(
@@ -61,6 +61,34 @@ class CanghaiClient:
         params: dict[str, Any] = {
             "token": TSANGHI_API_TOKEN,
             "ticker": ticker,
+        }
+        if start_date:
+            params["start_date"] = start_date
+        if end_date:
+            params["end_date"] = end_date
+        return _request_rows(url, params)
+
+    def fetch_income_statement_quarterly(
+        self,
+        exchange_code: str,
+        ticker: str,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Fetches quarterly income statement rows from Canghai.
+        通过沧海接口拉取季度利润表数据。
+        """
+        if not TSANGHI_API_TOKEN:
+            raise RuntimeError(
+                "TSANGHI_API_TOKEN is not configured for Canghai upstream. "
+                "必须在环境变量中配置 TSANGHI_API_TOKEN 才能调用沧海数据接口。"
+            )
+
+        url = f"{TSANGHI_BASE_URL}/api/fin/stock/{exchange_code}/income/statement/quarterly"
+        params: dict[str, Any] = {
+            "token": TSANGHI_API_TOKEN,
+            "ticker": ticker,
+            "order": 2,
         }
         if start_date:
             params["start_date"] = start_date

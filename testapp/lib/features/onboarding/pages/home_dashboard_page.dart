@@ -188,11 +188,6 @@ class HomeDashboardPage extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 6),
-                const Text(
-                  '每个工具都有独立页面，参数可拖动也可手动输入。',
-                  style: TextStyle(color: Color(0xFF4B5760), fontSize: 13),
-                ),
                 const SizedBox(height: 16),
                 _FinanceToolDrawerItem(
                   icon: '💸',
