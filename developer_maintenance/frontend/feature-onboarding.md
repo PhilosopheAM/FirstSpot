@@ -12,7 +12,7 @@
 |---|---|
 | `testapp/lib/features/onboarding/pages/first_open_gate_page.dart` | 首开分流页，读取本地偏好决定进入引导或首页 |
 | `testapp/lib/features/onboarding/pages/onboarding_flow_page.dart` | 首开引导流程容器，串联 welcome/profile/lesson/starter/reward |
-| `testapp/lib/features/onboarding/pages/home_dashboard_page.dart` | 引导完成后的首页仪表盘，含个股信息入口、学习课程入口、底部工具 / 金库入口和 debug 重置 |
+| `testapp/lib/features/onboarding/pages/home_dashboard_page.dart` | 引导完成后的首页仪表盘，含个股信息入口、学习课程入口、底部持仓 / 工具 / 金库入口和 debug 重置 |
 | `testapp/lib/features/onboarding/pages/vault_page.dart` | 金库页面，展示用户当前已获得的章节卡片和成就徽章，底部可切换“卡片 / 徽章”并支持左右滑动浏览 |
 | `testapp/lib/features/onboarding/data/onboarding_preferences_service.dart` | `SharedPreferences` 封装，记录首开完成状态与 Myo 彩蛋状态 |
 | `testapp/lib/features/onboarding/domain/onboarding_models.dart` | 首开画像枚举和 `OnboardingProfileAnswers` |
@@ -147,6 +147,7 @@ FirstOpenGatePage
 
 ## 变更日志
 
+- 2026-05-19: 首页底部新增「持仓」入口，跳转 `PortfolioPage`（与「工具」「金库」并列）。
 - 2026-04-29: 首页底部“工具”抽屉删除冗余说明文案，仅保留标题与两个工具入口卡片。
 - 2026-04-29: 首页底部 `🧮 小工具` 改名为 `🧮 工具`，点击后打开抽屉式工具选择器，分别进入基金持有成本和复利日均收益独立页面。
 - 2026-04-25: 文档对齐本轮重构，补齐关键文件、对外接口、依赖关系和所有主要 onboarding 变更记录。

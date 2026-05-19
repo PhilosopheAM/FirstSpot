@@ -73,7 +73,7 @@ myo_<expression>.png
 - 角色参考图：`创意参考图/小猫app-avatar-v1.png`
 - 生成方式：基于现有小猫形象，用图像生成方式扩展表情变体
 - 保存格式：PNG
-- `myo_lay_face_smile.png` 来源：用户提供素材，原路径 `G:\Tempo\FirstSpot_Tempo\myo_lay_face_smile.png`，用于投资者教育 CH01 “案例 · IPO 股份旅程”底部登场层。
+- `myo_lay_face_smile.png` 来源：用户提供素材，用于投资者教育 CH01 “案例 · IPO 股份旅程”底部登场层。
 
 ## 后续建议
 

@@ -17,7 +17,6 @@ FirstSpot/
 │   ├── UI_design_resource/   #   UI 美术资源（图像生成模型输出全部进入此处）
 │   └── Sound_design_resource/#   音效 / 音频资源（软件内音效全部进入此处）
 ├── Reading_Material/         # 学术与理论参考 PDF
-├── 毕业论文_Tempo/            # 毕业论文过程材料、任务书、开题/中期资料与论文批注修改稿
 ├── developer_maintenance/    # 代码维护说明（按模块拆分的 .md）
 ├── .cursor/                  # Cursor 规则、技能、计划
 ├── README.md                 # 项目简介
@@ -57,6 +56,12 @@ testapp/
 │       │   ├── pages/        #     两个工具的独立页面入口
 │       │   ├── widgets/      #     两个工具的独立交互组件
 │       │   └── domain/       #     持有成本与复利收益公式模型
+│       ├── portfolio/        #     手动录入持仓、总览可视化、四步录入与详情弹层
+│       │   ├── pages/        #     入口、总览、添加/编辑向导
+│       │   ├── widgets/      #     堆叠条、环形图、列表行、详情 Sheet
+│       │   ├── domain/       #     持仓模型与组合计算
+│       │   ├── data/         #     SharedPreferences 仓储与 ChangeNotifier
+│       │   └── utils/        #     金额与百分比格式化
 │       ├── learning_guidance/ #     投资者教育 12 章课程、题库、Myo 练习反馈与收藏状态
 │       ├── onboarding/       #     首开引导与首页
 │       └── stock_insight/    #     个股信息页
@@ -83,7 +88,8 @@ UX-Product-Design/
 │   ├── Gamified_Onboarding_Design.md       # V1 游戏化设计（Duolingo-style，面向 Z 世代 16-28）
 │   ├── stock-detail-page-design.md         # V1 个股/基金详情页极简 UX 设计文档
 │   ├── finance-micro-widgets-figma-prototype.md # V1 金融小组件 Figma 原型入口、节点与交互维护文档
-│   └── long-term-holding-compound-confidence-figma-prototype.md # V1 长期持仓复利信心页 Figma 原型维护文档
+│   ├── long-term-holding-compound-confidence-figma-prototype.md # V1 长期持仓复利信心页 Figma 原型维护文档
+│   └── 持仓设计.md            # V1 手动录入持仓、总览/可视化与分析、Figma 预备说明
 └── guidance/                 # 投资者教育学习框架（12 章 + 总览）
     ├── 00_学习框架总览.md     #   索引与收藏卡片系统总览
     ├── 01_什么是二级市场.md
@@ -114,6 +120,7 @@ UX-Product-Design/
 Design_Resource/
 ├── UI_design_resource/       # UI 美术资源
 │   ├── characters/myo/       #   Myo 角色插画成品；含金融小组件底部装饰图
+│   ├── characters/           #   其它角色插画（如 boy_thinking_transparent.png）
 │   ├── guidance_cards/       #   投资者教育 12 章线条风格主视觉与预览拼图
 │   ├── learning_guidance/    #   投资者教育章末练习背景图、通过页与重练页插画
 │   ├── guidance_rewards/     #   投资者教育收藏奖励规则与历史素材提示词归档
@@ -136,20 +143,7 @@ Design_Resource/
 - `游戏化实战.pdf`
 - `投资者教育App_游戏化交互设计原则与方法.md`
 
-### 2.6 `毕业论文_Tempo/` — 毕业论文材料
-
-存放本科毕业设计（论文）过程材料，包括任务书、开题报告、中期材料、指导老师批注版论文、批注修改建议稿与后续论文修订过程文件。当前重点子目录：
-
-```text
-毕业论文_Tempo/
-└── Bachelor_Graduation/      # 本科毕业论文任务书、开题/中期材料、论文初稿与批注修改建议
-```
-
-新增论文修订辅助文档：
-
-- `Bachelor_Graduation/论文批注修改建议与插入稿.md`：基于指导老师 Word 批注生成的 Markdown 修改建议，包含插入位置、建议文本、图示文字描述与参考文献二次审查记录。
-
-### 2.7 `developer_maintenance/` — 代码维护说明
+### 2.6 `developer_maintenance/` — 代码维护说明
 
 ```text
 developer_maintenance/
@@ -176,7 +170,7 @@ developer_maintenance/
 
 职责：每个 `.md` 记录一个模块的职责、关键文件、对外接口、依赖关系和变更日志。**每次改代码都要同步更新对应文档**（由 `.cursor/rules/firstspot-developer-maintenance.mdc` 强制）。
 
-### 2.8 `.cursor/` — Cursor 配置
+### 2.7 `.cursor/` — Cursor 配置
 
 ```text
 .cursor/
@@ -238,14 +232,14 @@ developer_maintenance/
 - 2026-04-25: 新增 `testapp/lib/features/onboarding/widgets/xp_flyup.dart`，统一 onboarding 内 `+N XP` 右上角向上飘动奖励反馈，替代底部 SnackBar。
 - 2026-04-25: 新增 `UX-Product-Design/guidance/14_先教育再小测学习闭环与素材补全记录.md` 与 `Design_Resource/Sound_design_resource/guidance_learning_audio_prompts.md`，记录 12 章投资者教育“先教育、再小测、奖励通行证”闭环、缺失美术提示词和音频提示词。
 - 2026-04-25: 复制 Myo 表情素材到 `testapp/assets/images/characters/myo/`，新增学习页金融术语高亮解释组件与术语表文件。
-- 2026-04-25: 从 `T:\Tempo_Files\FirstSpot_Assets` 导入 6 个 `guidance_*.wav` 投资者教育学习闭环音效，归档到 `Design_Resource/Sound_design_resource/` 并同步到 `testapp/assets/audio/` 接入前端播放。
-- 2026-04-25: 从 `T:\Tempo_Files\FirstSpot_Assets` 导入 8 张投资者教育章末练习图片，归档到 `Design_Resource/UI_design_resource/learning_guidance/` 并同步到 `testapp/assets/images/learning_guidance/`。
+- 2026-04-25: 从外部本地素材目录导入 6 个 `guidance_*.wav` 投资者教育学习闭环音效，归档到 `Design_Resource/Sound_design_resource/` 并同步到 `testapp/assets/audio/` 接入前端播放。
+- 2026-04-25: 从外部本地素材目录导入 8 张投资者教育章末练习图片，归档到 `Design_Resource/UI_design_resource/learning_guidance/` 并同步到 `testapp/assets/images/learning_guidance/`。
 - 2026-04-25: 新增 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 与 `guidance_concept_dialogues.dart`，维护 12 章概念聊天脚本，并在 CH01 概念卡实装 Myo 聊天框入口、上方飞入动画、返回续学和术语词卡解释。
 - 2026-04-25: 新增 `testapp/lib/features/onboarding/pages/vault_page.dart`，在首开完成后的用户主页底部提供 `🏛️ 金库` 入口，用于左右滑动查看已获得概念卡。
 - 2026-04-28: 更新 `UX-Product-Design/guidance/15_12章概念聊天对话与首章实装.md` 为 12 章概念路径图方法论文档，记录 50 轮上限和全章节概念聊天重构。
 - 2026-04-28: 新增 `UX-Product-Design/guidance/16_12章概念对话文本与术语维护稿.md`，从代码中抽取 12 章概念对话脚本与专业术语词表，作为后续文本生成代码流程的维护稿。
 - 2026-04-28: 更新 `testapp/lib/features/learning_guidance/` 第一章案例互动，将 CH01 “案例”改为 Myo 引导的滚动式 IPO 股份旅程讲解，并补充 IPO、承销商、打新、破发等术语解释与测试覆盖。
-- 2026-04-28: 从 `G:\Tempo\FirstSpot_Tempo\myo_lay_face_smile.png` 移入 Myo 角色设计资源并同步至 Flutter 资产目录，作为 CH01 IPO 案例讲解页底部登场图。
+- 2026-04-28: 导入 `myo_lay_face_smile.png` 至 Myo 角色设计资源并同步至 Flutter 资产目录，作为 CH01 IPO 案例讲解页底部登场图。
 - 2026-04-28: 新增 `Reading_Material/投资者教育App_游戏化交互设计原则与方法.md`，沉淀投资者教育 App 游戏化交互设计的体系化原则与方法笔记。
 
 - 2026-04-28: 将 CH01 IPO 案例讲解从“点击向下箭头”改为“拖拽下一位参与方进入上一幕”的推进方式；每幕弹出后 Myo 会再次从底部滑入并顶出可长按拖拽的参与方卡片，拖拽时上一幕卡片边框脉冲高亮，放入成功后自动弹出下一幕并在完成后点亮案例步骤；同步更新 widget 测试为长按拖拽流程。
@@ -260,4 +254,8 @@ developer_maintenance/
 - 2026-04-29: 新增 `testapp/test/finance_micro_widgets_test.dart`，覆盖复利计算器本金手动输入弹窗关闭流程；同步修复弹窗 `TextEditingController` 生命周期。
 - 2026-04-30: 新增 `datafetcher/app/services/stock_insight_service.py` 与 `datafetcher/tests/test_stock_insight_service.py`，后端提供 `/api/v1/stocks/{symbol}/insight` 个股洞察聚合接口；同步新增 `developer_maintenance/backend/services-stock-insight.md`。
 - 2026-04-30: 新增 `UX-Product-Design/V1/long-term-holding-compound-confidence-figma-prototype.md`，记录长期持仓复利信心页 Figma 原型入口、节点、计算口径与后续交互方向。
-- 2026-05-11: 新增 `毕业论文_Tempo/Bachelor_Graduation/论文批注修改建议与插入稿.md`，整理指导老师论文批注对应的正文插入稿、图示文字描述与参考文献二次审查记录，并补充 `毕业论文_Tempo/` 目录职责说明。
+- 2026-05-18: 移除毕业设计/毕业论文材料目录及其在本文档中的结构说明与历史变更记录。
+- 2026-05-18: 新增 `UX-Product-Design/V1/持仓设计.md`（手动持仓录入、总览可视化与 Figma 预备产品说明）。
+- 2026-05-19: 新增 `UX-Product-Design/V1/毕业设计答辩PPT内容设计.md`（毕业答辩 PPT 逐页内容、讲稿要点、配图与 Demo 清单）。
+- 2026-05-19: 新增 `testapp/lib/features/portfolio/` 持仓功能（中文 UI、本地持久化、首页底部入口）与 `developer_maintenance/frontend/feature-portfolio.md`、`testapp/test/portfolio_test.dart`。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/boy_thinking_transparent.png`（去除棋盘格背景后的透明 PNG 男孩思考插画）。

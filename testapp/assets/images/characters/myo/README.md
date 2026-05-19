@@ -15,7 +15,7 @@
 
 ## `myo_celebrate_greatly.png`
 
-- 来源：用户生成素材，原路径为 `G:\Tempo\FirstSpot_Tempo\myo_celebrate_greatly.png`。
+- 来源：用户生成素材，由外部导入后归档至本目录。
 - 接入位置：`assets/images/characters/myo/myo_celebrate_greatly.png`。
 - 格式检查：PNG，`1024 x 1536`，`Format32bppArgb`，包含 alpha 透明通道。
 - 使用场景：点击“完成体验”后，彩带出现并播放猫叫，随后 Myo 从屏幕底部弹出，占据约 2/3 屏幕。
@@ -36,7 +36,7 @@ assets:
 
 ## `myo_lay_face_smile.png`
 
-- 来源：用户提供素材，原路径为 `G:\Tempo\FirstSpot_Tempo\myo_lay_face_smile.png`。
+- 来源：用户提供素材，由外部导入后归档至本目录。
 - 接入位置：`assets/images/characters/myo/myo_lay_face_smile.png`。
 - 归档位置：`Design_Resource/UI_design_resource/characters/myo/myo_lay_face_smile.png`。
 - 使用场景：投资者教育 CH01 “案例 · IPO 股份旅程”讲解页开场，Myo 从屏幕底部趴地探出，顶部字幕出现后进入滚动式案例讲解。

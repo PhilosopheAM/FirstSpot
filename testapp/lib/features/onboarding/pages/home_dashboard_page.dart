@@ -1,11 +1,11 @@
-﻿// Last Updated: 2026-04-29
-// 最后更新: 2026-04-29
+﻿// Last Updated: 2026-05-19
+// 最后更新: 2026-05-19
 //
 // Module: Home Dashboard Page - the minimum viable homepage after onboarding
 // 模块: 首页仪表盘 - 引导结束后的最小可用首页
 //
-// Dependencies: flutter/material.dart, learning guidance, stock insight, finance tool pages, shared_preferences, vault page
-// 依赖: flutter/material.dart, 投资者教育课程, 个股信息页, 金融工具页, shared_preferences, 金库页
+// Dependencies: flutter/material.dart, learning guidance, stock insight, finance tool pages, portfolio page, shared_preferences, vault page
+// 依赖: flutter/material.dart, 投资者教育课程, 个股信息页, 金融工具页, 持仓页, shared_preferences, 金库页
 //
 // Author: Harry Chen
 // Email: 11911421@mail.sustech.edu.cn
@@ -15,6 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../finance_micro_widgets/pages/compound_daily_gain_page.dart';
 import '../../finance_micro_widgets/pages/effective_holding_cost_page.dart';
 import '../../learning_guidance/pages/guidance_learning_page.dart';
+import '../../portfolio/pages/portfolio_page.dart';
 import '../../stock_insight/pages/stock_insight_template_page.dart';
 import '../widgets/task_card.dart';
 import 'first_open_gate_page.dart';
@@ -118,13 +119,27 @@ class HomeDashboardPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               _HomeBottomEntryButton(
+                icon: '📊',
+                label: '持仓',
+                color: const Color(0xFF2563EB),
+                borderColor: const Color(0xFF3378F2),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const PortfolioPage(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(width: 16),
+              _HomeBottomEntryButton(
                 icon: '🧮',
                 label: '工具',
                 color: const Color(0xFF188246),
                 borderColor: const Color(0xFF1FA95B),
                 onTap: () => _showFinanceToolDrawer(context),
               ),
-              const SizedBox(width: 22),
+              const SizedBox(width: 16),
               _HomeBottomEntryButton(
                 icon: '🏛️',
                 label: '金库',
