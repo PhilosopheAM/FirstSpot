@@ -259,3 +259,11 @@ developer_maintenance/
 - 2026-05-19: 新增 `UX-Product-Design/V1/毕业设计答辩PPT内容设计.md`（毕业答辩 PPT 逐页内容、讲稿要点、配图与 Demo 清单）。
 - 2026-05-19: 新增 `testapp/lib/features/portfolio/` 持仓功能（中文 UI、本地持久化、首页底部入口）与 `developer_maintenance/frontend/feature-portfolio.md`、`testapp/test/portfolio_test.dart`。
 - 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/boy_thinking_transparent.png`（去除棋盘格背景后的透明 PNG 男孩思考插画）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/five_professionals_goals_transparent.png`（五人职业理财目标插画透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/five_professionals_goals_v2_transparent.png`（五人职业理财目标插画 v2 透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/interview_counseling_two_people_transparent.png`（双人访谈/咨询场景插画透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/boy_angry_crouching_transparent.png`（抱膝生气男孩插画透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/boy_cheering_arms_up_transparent.png`（举手欢呼男孩插画透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/two_children_opening_doors_stairs_transparent.png`（双人推门见楼梯场景插画透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/boy_with_myo_cat_transparent.png`（男孩与 Myo 白猫互动插画透明 PNG）。
+- 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/girl_reaching_game_items_transparent.png`（女孩伸手触及游戏道具插画透明 PNG）。
