@@ -12,6 +12,8 @@
 | `testapp/lib/features/learning_guidance/domain/guidance_models.dart`       | 章节、题目、选项与题型模型                                            |
 | `testapp/lib/features/learning_guidance/data/guidance_concept_dialogues.dart` | 12 章“概念”环节 Myo 引导式问答脚本；每章 7 个概念路径节点、每节点 3 个用户提问式选项 |
 | `testapp/lib/features/learning_guidance/data/guidance_lessons.dart`        | 12 章课程数据、关键点、Myo 引导语与 48 道练习题                            |
+| `testapp/lib/features/learning_guidance/data/guidance_user_progress.dart`   | 学习完成 / 小测通过 / 徽章持久化；首次空进度注入金库录屏演示（CH01–CH05 + 3 徽章） |
+| `testapp/lib/features/learning_guidance/data/guidance_demo_seed.dart`     | 金库录屏演示常量与 `vault_demo_seeded_v1` 标记键                          |
 | `testapp/lib/features/learning_guidance/data/guidance_glossary.dart`       | 金融 / 市场 / 投资术语表，维护新手白话解释、别名匹配和词汇表展示内容                    |
 | `testapp/lib/features/learning_guidance/pages/guidance_learning_page.dart` | 课程列表与章节详情页；目录页负责逐章解锁和词汇表入口；详情页先展示可点亮的概念、案例、互动学习卡，再解锁章末小测 |
 | `testapp/lib/features/learning_guidance/widgets/finance_term_text.dart`    | 可复用术语高亮文本组件；仅渲染页面传入的可高亮术语；点击术语弹出 Myo 解释框，支持右上角关闭和背景关闭    |
@@ -70,6 +72,7 @@ Navigator.of(context).push(
 
 ## 变更日志
 
+- 2026-05-21: 金库录屏演示种子（CH01–CH05 卡牌 + 3 徽章），`guidance_demo_seed.dart` + `guidance_user_progress` 首次空进度注入。
 - 2026-04-29: 新手村课程目录中点击未解锁章节时，取消底部灰色 SnackBar 提示，改为对应章节卡片右侧锁图标约 0.7s 红色呼吸灯反馈。
 - 2026-04-25: 新增 `learning_guidance` feature，接入 12 章课程、48 道练习、Myo 即时反馈组件和线条风格章节主视觉。
 - 2026-04-25: 新增 `learning_guidance_test.dart`，覆盖课程列表渲染和章节详情练习入口。

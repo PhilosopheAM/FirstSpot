@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:testapp/features/learning_guidance/data/guidance_demo_seed.dart';
 import 'package:testapp/features/learning_guidance/data/guidance_concept_dialogues.dart';
 import 'package:testapp/features/learning_guidance/data/guidance_lessons.dart';
 import 'package:testapp/features/learning_guidance/data/guidance_rewards.dart';
@@ -104,6 +105,24 @@ void main() {
     }
     expect(guidanceUserProgress.earnedCards, hasLength(12));
     expect(guidanceUserProgress.hasEarnedBadge('level_scholar_max'), isTrue);
+  });
+
+  test('Vault demo seed injects five cards and three badges on first load', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    await guidanceUserProgress.reloadFromPrefsForTesting();
+
+    expect(guidanceUserProgress.earnedCards, hasLength(5));
+    expect(
+      guidanceUserProgress.earnedCards.map((GuidanceLesson l) => l.id).toList(),
+      vaultDemoCompletedLessonIds,
+    );
+    expect(guidanceUserProgress.earnedBadges, hasLength(3));
+    expect(
+      guidanceUserProgress.earnedBadges
+          .map((GuidanceBadgeReward b) => b.id)
+          .toList(),
+      vaultDemoBadgeIds,
+    );
   });
 
   testWidgets('Vault page switches between card and badge collections', (

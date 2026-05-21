@@ -26,6 +26,7 @@ developer_maintenance/
     ├── feature-learning-guidance.md # 投资者教育 12 章课程
     ├── feature-onboarding.md #   首开引导功能
     ├── feature-portfolio.md # 我的持仓（手动录入与总览）
+    ├── portfolio-demo-recording.md # 持仓录屏演示数据与重置说明
     └── feature-stock-insight.md # 个股信息页功能
 ```
 

@@ -1,11 +1,11 @@
-// Last Updated: 2026-04-29
-// 最后更新: 2026-04-29
+// Last Updated: 2026-05-21
+// 最后更新: 2026-05-21
 //
 // Module: Guidance user progress - session reward and collectible state
 // 模块: 投资者教育用户进度 - 会话内奖励与收藏状态
 //
-// Dependencies: flutter/foundation.dart, shared_preferences, guidance_lessons, guidance_rewards, guidance_models
-// 依赖: flutter/foundation.dart, shared_preferences, guidance_lessons, guidance_rewards, guidance_models
+// Dependencies: flutter/foundation.dart, shared_preferences, guidance_lessons, guidance_rewards, guidance_models, guidance_demo_seed
+// 依赖: flutter/foundation.dart, shared_preferences, guidance_lessons, guidance_rewards, guidance_models, guidance_demo_seed
 //
 // Author: Harry Chen / AI
 // Email: 11911421@mail.sustech.edu.cn
@@ -16,10 +16,14 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/guidance_models.dart';
+import 'guidance_demo_seed.dart';
 import 'guidance_lessons.dart';
 import 'guidance_rewards.dart';
 
 final GuidanceUserProgress guidanceUserProgress = GuidanceUserProgress();
+
+/// When true, first empty learning progress seeds vault demo cards/badges.
+/// 为 true 时，首次无学习进度会注入金库演示卡牌与徽章。
 
 const String _completedLearningKey =
     'learning_guidance.completed_learning_lessons';
@@ -27,6 +31,10 @@ const String _passedQuizKey = 'learning_guidance.passed_quiz_lessons';
 const String _earnedBadgeKey = 'learning_guidance.earned_badge_rewards';
 
 class GuidanceUserProgress extends ChangeNotifier {
+  GuidanceUserProgress({this.seedVaultDemoOnFirstEmpty = true});
+
+  final bool seedVaultDemoOnFirstEmpty;
+
   final Set<String> _completedLearningLessonIds = <String>{};
   final Set<String> _passedQuizLessonIds = <String>{};
   final Set<String> _earnedBadgeRewardIds = <String>{};
@@ -80,6 +88,7 @@ class GuidanceUserProgress extends ChangeNotifier {
       _earnedBadgeRewardIds.addAll(
         preferences.getStringList(_earnedBadgeKey) ?? <String>[],
       );
+      await _maybeSeedVaultDemo(preferences);
       _hasLoaded = true;
       notifyListeners();
     } finally {
@@ -140,6 +149,52 @@ class GuidanceUserProgress extends ChangeNotifier {
     _hasLoaded = true;
     _isLoading = false;
     notifyListeners();
+  }
+
+  /// Clears in-memory progress and reloads from SharedPreferences (tests).
+  /// 清空内存进度并从 SharedPreferences 重新加载（测试用）。
+  Future<void> reloadFromPrefsForTesting() async {
+    _completedLearningLessonIds.clear();
+    _passedQuizLessonIds.clear();
+    _earnedBadgeRewardIds.clear();
+    _hasLoaded = false;
+    _isLoading = false;
+    await load();
+  }
+
+  /// Clears all learning progress and vault demo seed flag.
+  /// 清空全部学习进度与金库演示种子标记。
+  Future<void> clearAllProgress() async {
+    _completedLearningLessonIds.clear();
+    _passedQuizLessonIds.clear();
+    _earnedBadgeRewardIds.clear();
+    final SharedPreferences preferences =
+        await SharedPreferences.getInstance();
+    await Future.wait(<Future<bool>>[
+      preferences.remove(_completedLearningKey),
+      preferences.remove(_passedQuizKey),
+      preferences.remove(_earnedBadgeKey),
+      preferences.remove(vaultDemoSeededPrefKey),
+    ]);
+    _hasLoaded = true;
+    notifyListeners();
+  }
+
+  Future<void> _maybeSeedVaultDemo(SharedPreferences preferences) async {
+    if (!seedVaultDemoOnFirstEmpty) {
+      return;
+    }
+    if (preferences.getBool(vaultDemoSeededPrefKey) == true) {
+      return;
+    }
+    if (_completedLearningLessonIds.isNotEmpty) {
+      return;
+    }
+    _completedLearningLessonIds.addAll(vaultDemoCompletedLessonIds);
+    _passedQuizLessonIds.addAll(vaultDemoPassedQuizLessonIds);
+    _earnedBadgeRewardIds.addAll(vaultDemoBadgeIds);
+    await preferences.setBool(vaultDemoSeededPrefKey, true);
+    await _save();
   }
 
   bool _earnBadge(String rewardId) {

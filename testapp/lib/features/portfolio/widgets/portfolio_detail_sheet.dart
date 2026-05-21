@@ -1,11 +1,11 @@
-// Last Updated: 2026-05-19
-// 最后更新: 2026-05-19
+// Last Updated: 2026-05-21
+// 最后更新: 2026-05-21
 //
 // Module: Portfolio detail sheet - holding drill-down bottom sheet
 // 模块: 持仓详情底部弹层
 //
-// Dependencies: flutter/material.dart, portfolio_models, portfolio_theme, portfolio_format, portfolio_add_flow_page
-// 依赖: flutter/material.dart, portfolio_models, portfolio_theme, portfolio_format, portfolio_add_flow_page
+// Dependencies: flutter/material.dart, portfolio_models, portfolio_theme, portfolio_format, portfolio_add_flow_page, portfolio_sparkline_chart
+// 依赖: flutter/material.dart, portfolio_models, portfolio_theme, portfolio_format, portfolio_add_flow_page, portfolio_sparkline_chart
 //
 // Author: Harry Chen
 // Email: 11911421@mail.sustech.edu.cn
@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import '../domain/portfolio_models.dart';
 import '../pages/portfolio_add_flow_page.dart';
 import '../utils/portfolio_format.dart';
+import 'portfolio_sparkline_chart.dart';
 import 'portfolio_theme.dart';
 
 /// Shows holding detail with edit / delete actions.
@@ -109,21 +110,20 @@ Future<void> showPortfolioDetailSheet({
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Container(
-                height: 96,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF7F9FC),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  '走势示意（接入行情后显示）',
-                  style: TextStyle(
-                    fontSize: 12,
+              if (holding.note != null && holding.note!.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 6),
+                Text(
+                  holding.note!,
+                  style: const TextStyle(
+                    fontSize: 11,
                     color: PortfolioTheme.textSecondary,
                   ),
                 ),
+              ],
+              const SizedBox(height: 10),
+              PortfolioSparklineChart(
+                symbol: holding.symbol,
+                since: holding.tradeDate,
               ),
               const SizedBox(height: 14),
               _MetricGrid(

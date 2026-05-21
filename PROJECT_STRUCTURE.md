@@ -58,14 +58,15 @@ testapp/
 │       │   └── domain/       #     持有成本与复利收益公式模型
 │       ├── portfolio/        #     手动录入持仓、总览可视化、四步录入与详情弹层
 │       │   ├── pages/        #     入口、总览、添加/编辑向导
-│       │   ├── widgets/      #     堆叠条、环形图、列表行、详情 Sheet
+│       │   ├── widgets/      #     堆叠条、环形图、列表行、详情 Sheet、走势迷你图
 │       │   ├── domain/       #     持仓模型与组合计算
-│       │   ├── data/         #     SharedPreferences 仓储与 ChangeNotifier
+│       │   ├── data/         #     仓储、演示种子、mock 行情读取
 │       │   └── utils/        #     金额与百分比格式化
 │       ├── learning_guidance/ #     投资者教育 12 章课程、题库、Myo 练习反馈与收藏状态
 │       ├── onboarding/       #     首开引导与首页
 │       └── stock_insight/    #     个股信息页
 ├── test/                     # Flutter 测试；含 finance_micro_widgets_test.dart 与 stock_insight_template_page_test.dart
+├── assets/mock_data/         # 行情 mock JSON（持仓走势、个股洞察）；含 6 标的日线与 600519 历史样例
 ├── assets/audio/             # App 内音效；含 onboarding 与 learning_guidance 音频
 ├── assets/images/characters/myo/ # Myo 表情与装饰素材，供学习讲解、反馈和金融小组件复用
 ├── assets/images/guidance_cards/ # 投资者教育 12 章线条风格卡片图
@@ -267,3 +268,5 @@ developer_maintenance/
 - 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/two_children_opening_doors_stairs_transparent.png`（双人推门见楼梯场景插画透明 PNG）。
 - 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/boy_with_myo_cat_transparent.png`（男孩与 Myo 白猫互动插画透明 PNG）。
 - 2026-05-19: 新增 `Design_Resource/UI_design_resource/characters/girl_reaching_game_items_transparent.png`（女孩伸手触及游戏道具插画透明 PNG）。
+- 2026-05-21: 金库录屏演示：`guidance_demo_seed` 默认解锁 CH01–CH05 卡牌与 3 徽章；`portfolio-demo-recording.md` 扩展为录屏总览。
+- 2026-05-21: 持仓录屏演示：`portfolio_demo_seed`、`portfolio_market_data_service`、`portfolio_sparkline_chart`；`assets/mock_data/` 新增 6 标的日线 JSON。
